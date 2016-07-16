@@ -3,11 +3,6 @@
 local screenWidth, screenHeight = 400, 400
 
 -- board
-
--- board compsed of points
--- each point has a north, south, east, and west line, which are drawn or un-drawn
--- to compute filled squares, each point measures the square to it's south-east
-
 local masterBoard = {}
 
 function love.load()
