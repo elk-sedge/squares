@@ -132,38 +132,27 @@ end
 
 function drawLines(x, y)
 
+	local lineDrawn = false
+
 	for _, point in ipairs(masterBoard.points) do
 
-		if (not point.e) then
+		if (not lineDrawn) then
 
-			point.e = eastLineCollision(x, y, point.cartesianX, point.cartesianY)
+			if (not point.e) then
+
+				point.e = eastLineCollision(x, y, point.cartesianX, point.cartesianY)
+				lineDrawn = point.e
+
+			end
 
 		end
 
-		if (not point.s) then
+		if (not lineDrawn) then
 
-			point.s = southLineCollision(x, y, point.cartesianX, point.cartesianY)
+			if (not point.s) then
 
-		end
-
-	end
-
-end
-
-function fillSquares()
-
-	for pointIndex, point in ipairs(masterBoard.points) do
-
-		-- if point.e and point.s, get index of east and south points
-		if (point.e and point.s) then
-
-			local relativeEastPoint = masterBoard.points[pointIndex + masterBoard.vPoints]
-			local relativeSouthPoint = masterBoard.points[pointIndex + 1]
-
-			-- if east.s and south.e, square completed
-			if (relativeEastPoint.s and relativeSouthPoint.e) then
-
-				point.fillSquare = true
+				point.s = southLineCollision(x, y, point.cartesianX, point.cartesianY)
+				lineDrawn = point.s
 
 			end
 
@@ -206,5 +195,28 @@ function southLineCollision(x, y, pointX, pointY)
 	end
 
 	return false
+
+end
+
+function fillSquares()
+
+	for pointIndex, point in ipairs(masterBoard.points) do
+
+		-- if point.e and point.s, get index of east and south points
+		if (point.e and point.s) then
+
+			local relativeEastPoint = masterBoard.points[pointIndex + masterBoard.vPoints]
+			local relativeSouthPoint = masterBoard.points[pointIndex + 1]
+
+			-- if east.s and south.e, square completed
+			if (relativeEastPoint.s and relativeSouthPoint.e) then
+
+				point.fillSquare = true
+
+			end
+
+		end
+
+	end
 
 end
