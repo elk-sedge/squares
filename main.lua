@@ -19,13 +19,6 @@ end
 
 function initBoard(board, hPoints, vPoints)
 
-	board.points = 
-	{
-		h = hPoints,
-		v = vPoints,
-		r = 5
-	}
-
 	board.location = 
 	{
 		w = screenWidth - ((screenWidth / 100) * 10),
@@ -35,9 +28,38 @@ function initBoard(board, hPoints, vPoints)
 	board.location.x = (screenWidth / 2) - (board.location.w / 2)
 	board.location.y = (screenHeight / 2) - (board.location.h / 2)
 
+	board.points = {}
+
+	local pointCount = 1
+
+	for pointX = 0, hPoints - 1 do
+
+		for pointY = 0, vPoints - 1 do
+
+			local cartesianX = board.location.x + ((board.location.w / (hPoints - 1)) * pointX)
+			local cartesianY = board.location.y + ((board.location.h / (vPoints - 1)) * pointY)
+
+			board.points[pointCount] = 
+			{
+				x = pointX,
+				y = pointY,
+				n = false, e = false, s = false, w = false,
+				cartesianX = cartesianX,
+				cartesianY = cartesianY
+			}
+
+			pointCount = pointCount + 1
+
+		end
+
+	end
+
 	board.graphics = 
 	{
-		pointColour = { 255, 255, 255 }
+		pointSize = 5,
+		pointSegments = 4,
+		pointColour = { 255, 255, 255 },
+		lineColour = { 100, 100, 100 }
 	}
 
 end
@@ -52,16 +74,9 @@ function drawBoard(board)
 
 	love.graphics.setColor(board.graphics.pointColour)
 
-	for pointX = 0, board.points.h - 1 do
-
-		for pointY = 0, board.points.v - 1 do
-
-			local cartesianX = board.location.x + ((board.location.w / (board.points.h - 1)) * pointX)
-			local cartesianY = board.location.y + ((board.location.h / (board.points.v - 1)) * pointY)
-
-			love.graphics.circle("fill", cartesianX, cartesianY, board.points.r, 4)
-
-		end
+	for _, point in ipairs(board.points) do
+			
+		love.graphics.circle("fill", point.cartesianX, point.cartesianY, board.graphics.pointSize, board.graphics.pointSegments)
 
 	end
 
