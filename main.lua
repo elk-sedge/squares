@@ -61,7 +61,8 @@ function initBoard(board, hPoints, vPoints)
 		pointSize = 5,
 		pointSegments = 4,
 		pointColour = { 255, 255, 255 },
-		lineColour = { 100, 100, 100 }
+		lineUndrawnColour = { 100, 100, 100 },
+		lineDrawnColour = { 255, 0, 0 }
 	}
 
 	board.graphics.hLineLength = board.location.w / (hPoints - 1)
@@ -79,15 +80,30 @@ function drawBoard(board)
 
 	for _, point in ipairs(board.points) do
 
-		-- draw south/east lines
-		love.graphics.setColor(board.graphics.lineColour)
+		-- draw east lines
+		if (point.x < board.hPoints - 1) then
 
-		if (point.y < board.vPoints - 1) then
-			love.graphics.line(point.cartesianX, point.cartesianY, point.cartesianX, point.cartesianY + board.graphics.vLineLength)
+			if (point.e) then
+				love.graphics.setColor(board.graphics.lineDrawnColour)
+			else
+				love.graphics.setColor(board.graphics.lineUndrawnColour)
+			end
+
+			love.graphics.line(point.cartesianX, point.cartesianY, point.cartesianX + board.graphics.hLineLength, point.cartesianY)
+
 		end
 
-		if (point.x < board.hPoints - 1) then
-			love.graphics.line(point.cartesianX, point.cartesianY, point.cartesianX + board.graphics.hLineLength, point.cartesianY)
+		-- draw south lines
+		if (point.y < board.vPoints - 1) then
+
+			if (point.s) then
+				love.graphics.setColor(board.graphics.lineDrawnColour)
+			else
+				love.graphics.setColor(board.graphics.lineUndrawnColour)
+			end
+
+			love.graphics.line(point.cartesianX, point.cartesianY, point.cartesianX, point.cartesianY + board.graphics.vLineLength)
+
 		end
 
 		-- draw point
@@ -95,5 +111,57 @@ function drawBoard(board)
 		love.graphics.circle("fill", point.cartesianX, point.cartesianY, board.graphics.pointSize, board.graphics.pointSegments)
 
 	end
+
+end
+
+function love.mousepressed(x, y)
+
+	for _, point in pairs(masterBoard.points) do
+
+		if (not point.e) then
+			point.e = eastLineCollision(x, y, point.cartesianX, point.cartesianY)
+		end
+
+		if (not point.s) then
+			point.s = southLineCollision(x, y, point.cartesianX, point.cartesianY)
+		end
+
+	end
+
+end
+
+function eastLineCollision(x, y, pointX, pointY)
+
+	if (x > pointX) and (x < pointX + masterBoard.graphics.hLineLength) then
+
+		local yOffset = y - pointY
+
+		if (yOffset < 10 and yOffset > -10) then
+
+			return true
+
+		end
+
+	end	
+
+	return false
+
+end
+
+function southLineCollision(x, y, pointX, pointY)
+
+	if (y > pointY) and (y < pointY + masterBoard.graphics.vLineLength) then
+
+		local xOffset = x - pointX
+
+		if (xOffset < 10 and xOffset > -10) then
+
+			return true
+
+		end
+
+	end
+
+	return false
 
 end
