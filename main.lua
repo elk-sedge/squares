@@ -1,5 +1,7 @@
--- general
+-- allow one line anywhere
+-- allow multiple lines that complete squares
 
+-- general
 local screenWidth, screenHeight = 400, 400
 
 -- board
@@ -123,6 +125,13 @@ end
 
 function love.mousepressed(x, y)
 
+	drawLines(x, y)
+	fillSquares()
+
+end
+
+function drawLines(x, y)
+
 	for _, point in ipairs(masterBoard.points) do
 
 		if (not point.e) then
@@ -138,6 +147,10 @@ function love.mousepressed(x, y)
 		end
 
 	end
+
+end
+
+function fillSquares()
 
 	for pointIndex, point in ipairs(masterBoard.points) do
 
