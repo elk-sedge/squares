@@ -45,9 +45,12 @@ function initBoard(board, hPoints, vPoints)
 			{
 				x = pointX,
 				y = pointY,
-				n = false, e = false, s = false, w = false,
+				
 				cartesianX = cartesianX,
-				cartesianY = cartesianY
+				cartesianY = cartesianY,
+
+				n = false, e = false, s = false, w = false,
+				fillSquare = false
 			}
 
 			pointCount = pointCount + 1
@@ -62,7 +65,8 @@ function initBoard(board, hPoints, vPoints)
 		pointSegments = 4,
 		pointColour = { 255, 255, 255 },
 		lineUndrawnColour = { 100, 100, 100 },
-		lineDrawnColour = { 255, 0, 0 }
+		lineDrawnColour = { 255, 0, 0 },
+		squareColour = { 100, 100, 255 }
 	}
 
 	board.graphics.hLineLength = board.location.w / (hPoints - 1)
@@ -106,6 +110,14 @@ function drawBoard(board)
 
 		end
 
+		-- draw square
+		if (point.fillSquare) then
+
+			love.graphics.setColor(board.graphics.squareColour)
+			love.graphics.rectangle("fill", point.cartesianX, point.cartesianY, board.graphics.hLineLength, board.graphics.vLineLength)
+
+		end
+
 		-- draw point
 		love.graphics.setColor(board.graphics.pointColour)
 		love.graphics.circle("fill", point.cartesianX, point.cartesianY, board.graphics.pointSize, board.graphics.pointSegments)
@@ -116,14 +128,37 @@ end
 
 function love.mousepressed(x, y)
 
-	for _, point in pairs(masterBoard.points) do
+	for _, point in ipairs(masterBoard.points) do
 
 		if (not point.e) then
+
 			point.e = eastLineCollision(x, y, point.cartesianX, point.cartesianY)
+
 		end
 
 		if (not point.s) then
+
 			point.s = southLineCollision(x, y, point.cartesianX, point.cartesianY)
+
+		end
+
+	end
+
+	for pointIndex, point in ipairs(masterBoard.points) do
+
+		-- if point.e and point.s, get index of east and south points
+		if (point.e and point.s) then
+
+			local relativeEastPoint = masterBoard.points[pointIndex + masterBoard.vPoints]
+			local relativeSouthPoint = masterBoard.points[pointIndex + 1]
+
+			-- if east.s and south.e, square completed
+			if (relativeEastPoint.s and relativeSouthPoint.e) then
+
+				point.fillSquare = true
+
+			end
+
 		end
 
 	end
