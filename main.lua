@@ -19,6 +19,8 @@ end
 
 function initBoard(board, hPoints, vPoints)
 
+	board.hPoints, board.vPoints = hPoints, vPoints
+
 	board.location = 
 	{
 		w = screenWidth - ((screenWidth / 100) * 10),
@@ -62,6 +64,9 @@ function initBoard(board, hPoints, vPoints)
 		lineColour = { 100, 100, 100 }
 	}
 
+	board.graphics.hLineLength = board.location.w / (hPoints - 1)
+	board.graphics.vLineLength = board.location.h / (vPoints - 1)
+
 end
 
 function love.draw()
@@ -72,10 +77,21 @@ end
 
 function drawBoard(board)
 
-	love.graphics.setColor(board.graphics.pointColour)
-
 	for _, point in ipairs(board.points) do
-			
+
+		-- draw south/east lines
+		love.graphics.setColor(board.graphics.lineColour)
+
+		if (point.y < board.vPoints - 1) then
+			love.graphics.line(point.cartesianX, point.cartesianY, point.cartesianX, point.cartesianY + board.graphics.vLineLength)
+		end
+
+		if (point.x < board.hPoints - 1) then
+			love.graphics.line(point.cartesianX, point.cartesianY, point.cartesianX + board.graphics.hLineLength, point.cartesianY)
+		end
+
+		-- draw point
+		love.graphics.setColor(board.graphics.pointColour)
 		love.graphics.circle("fill", point.cartesianX, point.cartesianY, board.graphics.pointSize, board.graphics.pointSegments)
 
 	end
