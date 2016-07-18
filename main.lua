@@ -66,11 +66,13 @@ function initBoard(board, hPoints, vPoints)
 		pointColour = { 255, 255, 255 },
 		lineUndrawnColour = { 100, 100, 100 },
 		lineDrawnColour = { 255, 255, 255 },
-		squareColour = { 105, 214, 250 }
+		squareColour = { 105, 214, 250 },
+		playerColour = { 255, 255, 255 }
 	}
 
 	board.graphics.hLineLength = board.location.w / (hPoints - 1)
 	board.graphics.vLineLength = board.location.h / (vPoints - 1)
+	board.graphics.playerSize = ((board.graphics.hLineLength + board.graphics.vLineLength) / 2) / 6
 
 	drawBoard(masterBoard)
 
@@ -119,10 +121,16 @@ function drawBoard(board)
 		end
 
 		-- draw square
-		if (point.fillSquare) then
+		if (point.fillSquare) then -- set square to filled, so not drawn again
 
-			love.graphics.setColor(board.graphics.squareColour)
-			love.graphics.rectangle("fill", point.cartesianX, point.cartesianY, board.graphics.hLineLength, board.graphics.vLineLength)
+			love.graphics.setColor(board.graphics.playerColour)
+
+			local squareCenterX = point.cartesianX + (board.graphics.hLineLength / 2)
+			local squareCenterY = point.cartesianY + (board.graphics.vLineLength / 2)
+
+			love.graphics.circle("line", squareCenterX, squareCenterY, board.graphics.playerSize, 20)
+
+			print(board.graphics.pointSize * 1.3)
 
 		end
 
