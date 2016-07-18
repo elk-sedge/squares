@@ -62,8 +62,8 @@ function initBoard(board, hPoints, vPoints)
 		pointSegments = 4,
 		pointColour = { 255, 255, 255 },
 		lineUndrawnColour = { 100, 100, 100 },
-		lineDrawnColour = { 255, 0, 0 },
-		squareColour = { 100, 100, 255 }
+		lineDrawnColour = { 255, 120, 174 },
+		squareColour = { 105, 214, 250 }
 	}
 
 	board.graphics.hLineLength = board.location.w / (hPoints - 1)
@@ -164,17 +164,21 @@ end
 
 function eastLineCollision(x, y, pointX, pointY)
 
-	if (x > pointX) and (x < pointX + masterBoard.graphics.hLineLength) then
+	if (not closeToPoint(x, y, pointX, pointY)) then
 
-		local yOffset = y - pointY
+		if (x > pointX) and (x < pointX + masterBoard.graphics.hLineLength) then
 
-		if (yOffset < 10 and yOffset > -10) then
+			local yOffset = y - pointY
 
-			return true
+			if (yOffset < 10 and yOffset > -10) then
 
-		end
+				return true
 
-	end	
+			end
+
+		end	
+
+	end
 
 	return false
 
@@ -182,11 +186,31 @@ end
 
 function southLineCollision(x, y, pointX, pointY)
 
-	if (y > pointY) and (y < pointY + masterBoard.graphics.vLineLength) then
+	if (not closeToPoint(x, y, pointX, pointY)) then
 
-		local xOffset = x - pointX
+		if (y > pointY) and (y < pointY + masterBoard.graphics.vLineLength) then
 
-		if (xOffset < 10 and xOffset > -10) then
+			local xOffset = x - pointX
+
+			if (xOffset < 10 and xOffset > -10) then
+
+				return true
+
+			end
+
+		end
+
+	end
+
+	return false
+
+end
+
+function closeToPoint(x, y, pointX, pointY)
+
+	if (x > pointX - 10 and x < pointX + 10) then
+
+		if (y > pointY - 10 and y < pointY + 10) then
 
 			return true
 
