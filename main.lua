@@ -121,7 +121,7 @@ function drawBoard(board)
 		end
 
 		-- draw square
-		if (point.fillSquare) then -- set square to filled, so not drawn again
+		if (point.fillSquare) then 
 
 			love.graphics.setColor(board.graphics.playerColour)
 
