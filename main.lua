@@ -6,10 +6,13 @@ local screenWidth, screenHeight = 400, 400
 
 -- board
 local masterBoard = {}
+local boardCanvas
 
 function love.load()
 
 	love.window.setMode(screenWidth, screenHeight)
+	boardCanvas = love.graphics.newCanvas(screenWidth, screenHeight)
+
 	initBoard(masterBoard, 10, 10)
 
 end
@@ -62,22 +65,30 @@ function initBoard(board, hPoints, vPoints)
 		pointSegments = 4,
 		pointColour = { 255, 255, 255 },
 		lineUndrawnColour = { 100, 100, 100 },
-		lineDrawnColour = { 255, 120, 174 },
+		lineDrawnColour = { 255, 255, 255 },
 		squareColour = { 105, 214, 250 }
 	}
 
 	board.graphics.hLineLength = board.location.w / (hPoints - 1)
 	board.graphics.vLineLength = board.location.h / (vPoints - 1)
 
-end
-
-function love.draw()
-
 	drawBoard(masterBoard)
 
 end
 
+function love.draw()	
+
+	love.graphics.setColor(255, 255, 255)
+	love.graphics.setBlendMode("alpha", "premultiplied")
+	love.graphics.draw(boardCanvas)
+
+end
+
 function drawBoard(board)
+
+	love.graphics.setCanvas(boardCanvas)
+	love.graphics.clear()
+	love.graphics.setBlendMode("alpha")
 
 	for _, point in ipairs(board.points) do
 
@@ -121,16 +132,19 @@ function drawBoard(board)
 
 	end
 
+	love.graphics.setCanvas()
+
 end
 
 function love.mousepressed(x, y)
 
-	drawLines(x, y)
-	fillSquares()
+	updateLines(x, y)
+	updateSquares()
+	drawBoard(masterBoard)
 
 end
 
-function drawLines(x, y)
+function updateLines(x, y)
 
 	local lineDrawn = false
 
@@ -222,7 +236,7 @@ function closeToPoint(x, y, pointX, pointY)
 
 end
 
-function fillSquares()
+function updateSquares()
 
 	for pointIndex, point in ipairs(masterBoard.points) do
 
