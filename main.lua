@@ -8,10 +8,14 @@ local screenWidth, screenHeight = 400, 400
 local masterBoard = {}
 local boardCanvas
 
+-- players
+local currentPlayer
+
 function love.load()
 
 	love.window.setMode(screenWidth, screenHeight)
 	boardCanvas = love.graphics.newCanvas(screenWidth, screenHeight)
+	currentPlayer = 1
 
 	initBoard(masterBoard, 10, 10)
 
@@ -262,6 +266,16 @@ function updateSquares()
 			end
 
 		end
+
+	end
+
+end
+
+function love.keypressed(key)
+
+	if (key == "space") then
+
+		if currentPlayer == 1 then currentPlayer = 2 elseif currentPlayer == 2 then currentPlayer = 1 end
 
 	end
 
