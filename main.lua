@@ -230,9 +230,11 @@ end
 
 function closeToPoint(x, y, pointX, pointY)
 
-	if (x > pointX - 10 and x < pointX + 10) then
+	local distance = 15
 
-		if (y > pointY - 10 and y < pointY + 10) then
+	if (x > pointX - distance and x < pointX + distance) then
+
+		if (y > pointY - distance and y < pointY + distance) then
 
 			return true
 
