@@ -136,8 +136,6 @@ function drawBoard(board)
 
 			love.graphics.circle("line", squareCenterX, squareCenterY, board.graphics.playerSize, 20)
 
-			print(board.graphics.pointSize * 1.3)
-
 		end
 
 		-- draw point
