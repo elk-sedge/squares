@@ -256,10 +256,14 @@ function updateSquares()
 			local relativeEastPoint = masterBoard.points[pointIndex + masterBoard.vPoints]
 			local relativeSouthPoint = masterBoard.points[pointIndex + 1]
 
-			-- if east.s and south.e, square completed
-			if (relativeEastPoint.s and relativeSouthPoint.e) then
+			if (relativeEastPoint and relativeSouthPoint) then
 
-				point.fillSquare = true
+				-- if east.s and south.e, square completed
+				if (relativeEastPoint.s and relativeSouthPoint.e) then
+
+					point.fillSquare = true
+
+				end
 
 			end
 
