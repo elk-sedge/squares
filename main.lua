@@ -50,7 +50,8 @@ function initBoard(board, hPoints, vPoints)
 				cartesianY = cartesianY,
 
 				n = false, e = false, s = false, w = false,
-				fillSquare = false
+				nh = false, eh = false, sh = false, wh = false,
+				fillSquare = false,
 			}
 
 			pointCount = pointCount + 1
@@ -66,6 +67,7 @@ function initBoard(board, hPoints, vPoints)
 		pointColour = { 255, 255, 255 },
 		lineUndrawnColour = { 100, 100, 100 },
 		lineDrawnColour = { 255, 255, 255 },
+		lineHighlightColour = { 0, 255, 0 },
 		squareColour = { 105, 214, 250 },
 		playerColour = { 255, 255, 255 }
 	}
@@ -99,6 +101,8 @@ function drawBoard(board)
 
 			if (point.e) then
 				love.graphics.setColor(board.graphics.lineDrawnColour)
+			elseif (point.eh) then
+				love.graphics.setColor(board.graphics.lineHighlightColour)
 			else
 				love.graphics.setColor(board.graphics.lineUndrawnColour)
 			end
@@ -112,6 +116,8 @@ function drawBoard(board)
 
 			if (point.s) then
 				love.graphics.setColor(board.graphics.lineDrawnColour)
+			elseif (point.sh) then
+				love.graphics.setColor(board.graphics.lineHighlightColour)		
 			else
 				love.graphics.setColor(board.graphics.lineUndrawnColour)
 			end
@@ -144,11 +150,50 @@ function drawBoard(board)
 
 end
 
+function love.mousemoved(x, y)
+
+	highlightLine(x, y)
+	drawBoard(masterBoard)
+
+end
+
 function love.mousepressed(x, y)
 
 	updateLines(x, y)
 	updateSquares()
 	drawBoard(masterBoard)
+
+end
+
+function highlightLine(x, y)
+
+	for _, point in pairs(masterBoard.points) do
+
+		point.eh, point.sh = false, false
+
+	end
+
+	for _, point in ipairs(masterBoard.points) do
+
+		if (not point.e and not point.eh) then
+
+			point.eh = eastLineCollision(x, y, point.cartesianX, point.cartesianY)
+
+		end
+
+		if (not point.s and not point.sh) then
+
+			point.sh = southLineCollision(x, y, point.cartesianX, point.cartesianY)
+
+		end
+
+		if (point.eh or point.sh) then
+
+			break
+
+		end
+
+	end
 
 end
 
