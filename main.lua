@@ -58,6 +58,7 @@ function initBoard(board, hPoints, vPoints)
 				n = false, e = false, s = false, w = false,
 				nh = false, eh = false, sh = false, wh = false,
 				fillSquare = false,
+				player = nil
 			}
 
 			pointCount = pointCount + 1
@@ -135,12 +136,21 @@ function drawBoard(board)
 		-- draw square
 		if (point.fillSquare) then 
 
-			love.graphics.setColor(board.graphics.playerColour)
-
 			local squareCenterX = point.cartesianX + (board.graphics.hLineLength / 2)
 			local squareCenterY = point.cartesianY + (board.graphics.vLineLength / 2)
 
-			love.graphics.circle("line", squareCenterX, squareCenterY, board.graphics.playerSize, 20)
+			if (point.player == 1) then
+
+				love.graphics.circle("line", squareCenterX, squareCenterY, board.graphics.playerSize, 20)
+
+			elseif (point.player == 2) then
+
+				local squareSize = board.graphics.playerSize * 2
+
+				love.graphics.rectangle("line", squareCenterX - (squareSize / 2), squareCenterY - (squareSize / 2), 
+					squareSize, squareSize)
+
+			end
 
 		end
 
@@ -362,7 +372,12 @@ function updateSquares()
 				-- if east.s and south.e, square completed
 				if (relativeEastPoint.s and relativeSouthPoint.e) then
 
-					point.fillSquare = true
+					if (not point.fillSquare) then
+
+						point.fillSquare = true
+						point.player = currentPlayer
+
+					end
 
 				end
 
