@@ -181,13 +181,13 @@ function highlightLine(board, x, y)
 
 		if (not point.e and not point.eh) then
 
-			point.eh = eastLineCollision(board, x, y, point)
+			point.eh = eastLineCollision(board, point, x, y)
 
 		end
 
 		if (not point.s and not point.sh) then
 
-			point.sh = southLineCollision(board, x, y, point)
+			point.sh = southLineCollision(board, point, x, y)
 
 		end
 
@@ -211,7 +211,7 @@ function updateLines(board, x, y)
 
 			if (not point.e) then
 
-				point.e = eastLineCollision(board, x, y, point)
+				point.e = eastLineCollision(board, point, x, y)
 				lineDrawn = point.e
 
 			end
@@ -222,7 +222,7 @@ function updateLines(board, x, y)
 
 			if (not point.s) then
 
-				point.s = southLineCollision(board, x, y, point)
+				point.s = southLineCollision(board, point, x, y)
 				lineDrawn = point.s
 
 			end
@@ -233,9 +233,9 @@ function updateLines(board, x, y)
 
 end
 
-function eastLineCollision(board, x, y, point)
+function eastLineCollision(board, point, x, y)
 
-	if (not closeToAdjacentPoints(board, x, y, point, "east")) then
+	if (not closeToAdjacentPoints(board, point, "east", x, y)) then
 
 		if (x > point.cartesianX) and (x < point.cartesianX + board.graphics.hLineLength) then
 
@@ -255,9 +255,9 @@ function eastLineCollision(board, x, y, point)
 
 end
 
-function southLineCollision(board, x, y, point)
+function southLineCollision(board, point, x, y)
 
-	if (not closeToAdjacentPoints(board, x, y, point, "south")) then
+	if (not closeToAdjacentPoints(board, point, "south", x, y)) then
 
 		if (y > point.cartesianY) and (y < point.cartesianY + board.graphics.vLineLength) then
 
@@ -277,9 +277,9 @@ function southLineCollision(board, x, y, point)
 
 end
 
-function closeToAdjacentPoints(board, x, y, point, direction)
+function closeToAdjacentPoints(board, point, direction, x, y)
 
-	if (closeToPoint(x, y, point)) then
+	if (closeToPoint(point, x, y)) then
 
 		return true
 
@@ -291,7 +291,7 @@ function closeToAdjacentPoints(board, x, y, point, direction)
 
 		if (eastPoint) then
 
-			if (closeToPoint(x, y, eastPoint)) then
+			if (closeToPoint(eastPoint, x, y)) then
 
 				return true
 
@@ -305,7 +305,7 @@ function closeToAdjacentPoints(board, x, y, point, direction)
 
 		if (southPoint) then
 
-			if (closeToPoint(x, y, southPoint)) then
+			if (closeToPoint(southPoint, x, y)) then
 
 				return true
 
@@ -331,7 +331,7 @@ function getSouthPoint(board, point)
 
 end
 
-function closeToPoint(x, y, point) 
+function closeToPoint(point, x, y) 
 
 	local distance = 15
 
