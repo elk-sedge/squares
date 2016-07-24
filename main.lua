@@ -47,6 +47,8 @@ function initBoard(board, hPoints, vPoints)
 
 			board.points[pointCount] = 
 			{
+				index = pointCount,
+
 				x = pointX,
 				y = pointY,
 				
@@ -54,7 +56,8 @@ function initBoard(board, hPoints, vPoints)
 				cartesianY = cartesianY,
 
 				n = false, e = false, s = false, w = false,
-				fillSquare = false
+				nh = false, eh = false, sh = false, wh = false,
+				fillSquare = false,
 			}
 
 			pointCount = pointCount + 1
@@ -70,6 +73,7 @@ function initBoard(board, hPoints, vPoints)
 		pointColour = { 255, 255, 255 },
 		lineUndrawnColour = { 100, 100, 100 },
 		lineDrawnColour = { 255, 255, 255 },
+		lineHighlightColour = { 0, 255, 0 },
 		squareColour = { 105, 214, 250 },
 		playerColour = { 255, 255, 255 }
 	}
@@ -103,6 +107,8 @@ function drawBoard(board)
 
 			if (point.e) then
 				love.graphics.setColor(board.graphics.lineDrawnColour)
+			elseif (point.eh) then
+				love.graphics.setColor(board.graphics.lineHighlightColour)
 			else
 				love.graphics.setColor(board.graphics.lineUndrawnColour)
 			end
@@ -116,6 +122,8 @@ function drawBoard(board)
 
 			if (point.s) then
 				love.graphics.setColor(board.graphics.lineDrawnColour)
+			elseif (point.sh) then
+				love.graphics.setColor(board.graphics.lineHighlightColour)		
 			else
 				love.graphics.setColor(board.graphics.lineUndrawnColour)
 			end
@@ -134,8 +142,6 @@ function drawBoard(board)
 
 			love.graphics.circle("line", squareCenterX, squareCenterY, board.graphics.playerSize, 20)
 
-			print(board.graphics.pointSize * 1.3)
-
 		end
 
 		-- draw point
@@ -148,25 +154,64 @@ function drawBoard(board)
 
 end
 
+function love.mousemoved(x, y)
+
+	highlightLine(masterBoard, x, y)
+	drawBoard(masterBoard)
+
+end
+
 function love.mousepressed(x, y)
 
-	updateLines(x, y)
+	updateLines(masterBoard, x, y)
 	updateSquares()
 	drawBoard(masterBoard)
 
 end
 
-function updateLines(x, y)
+function highlightLine(board, x, y)
+
+	for _, point in pairs(board.points) do
+
+		point.eh, point.sh = false, false
+
+	end
+
+	for _, point in ipairs(board.points) do
+
+		if (not point.e and not point.eh) then
+
+			point.eh = eastLineCollision(board, x, y, point)
+
+		end
+
+		if (not point.s and not point.sh) then
+
+			point.sh = southLineCollision(board, x, y, point)
+
+		end
+
+		if (point.eh or point.sh) then
+
+			break
+
+		end
+
+	end
+
+end
+
+function updateLines(board, x, y)
 
 	local lineDrawn = false
 
-	for _, point in ipairs(masterBoard.points) do
+	for _, point in ipairs(board.points) do
 
 		if (not lineDrawn) then
 
 			if (not point.e) then
 
-				point.e = eastLineCollision(x, y, point.cartesianX, point.cartesianY)
+				point.e = eastLineCollision(board, x, y, point)
 				lineDrawn = point.e
 
 			end
@@ -177,7 +222,7 @@ function updateLines(x, y)
 
 			if (not point.s) then
 
-				point.s = southLineCollision(x, y, point.cartesianX, point.cartesianY)
+				point.s = southLineCollision(board, x, y, point)
 				lineDrawn = point.s
 
 			end
@@ -188,13 +233,13 @@ function updateLines(x, y)
 
 end
 
-function eastLineCollision(x, y, pointX, pointY)
+function eastLineCollision(board, x, y, point)
 
-	if (not closeToPoint(x, y, pointX, pointY)) then
+	if (not closeToAdjacentPoints(board, x, y, point, "east")) then
 
-		if (x > pointX) and (x < pointX + masterBoard.graphics.hLineLength) then
+		if (x > point.cartesianX) and (x < point.cartesianX + board.graphics.hLineLength) then
 
-			local yOffset = y - pointY
+			local yOffset = y - point.cartesianY
 
 			if (yOffset < 10 and yOffset > -10) then
 
@@ -210,13 +255,13 @@ function eastLineCollision(x, y, pointX, pointY)
 
 end
 
-function southLineCollision(x, y, pointX, pointY)
+function southLineCollision(board, x, y, point)
 
-	if (not closeToPoint(x, y, pointX, pointY)) then
+	if (not closeToAdjacentPoints(board, x, y, point, "south")) then
 
-		if (y > pointY) and (y < pointY + masterBoard.graphics.vLineLength) then
+		if (y > point.cartesianY) and (y < point.cartesianY + board.graphics.vLineLength) then
 
-			local xOffset = x - pointX
+			local xOffset = x - point.cartesianX
 
 			if (xOffset < 10 and xOffset > -10) then
 
@@ -232,19 +277,73 @@ function southLineCollision(x, y, pointX, pointY)
 
 end
 
-function closeToPoint(x, y, pointX, pointY)
+function closeToAdjacentPoints(board, x, y, point, direction)
 
-	if (x > pointX - 10 and x < pointX + 10) then
+	if (closeToPoint(x, y, point)) then
 
-		if (y > pointY - 10 and y < pointY + 10) then
+		return true
 
-			return true
+	end
+
+	if (direction == "east") then
+
+		local eastPoint = getEastPoint(board, point)
+
+		if (eastPoint) then
+
+			if (closeToPoint(x, y, eastPoint)) then
+
+				return true
+
+			end
+
+		end
+
+	elseif (direction == "south") then
+
+		local southPoint = getSouthPoint(board, point)
+
+		if (southPoint) then
+
+			if (closeToPoint(x, y, southPoint)) then
+
+				return true
+
+			end
 
 		end
 
 	end
 
 	return false
+
+end
+
+function getEastPoint(board, point)
+
+	return board.points[point.index + board.vPoints]
+
+end
+
+function getSouthPoint(board, point)
+
+	return board.points[point.index + 1]
+
+end
+
+function closeToPoint(x, y, point) 
+
+	local distance = 15
+
+	if (x > point.cartesianX - distance and x < point.cartesianX + distance) then
+
+		if (y > point.cartesianY - distance and y < point.cartesianY + distance) then
+
+			return true
+
+		end
+
+	end
 
 end
 
@@ -258,10 +357,14 @@ function updateSquares()
 			local relativeEastPoint = masterBoard.points[pointIndex + masterBoard.vPoints]
 			local relativeSouthPoint = masterBoard.points[pointIndex + 1]
 
-			-- if east.s and south.e, square completed
-			if (relativeEastPoint.s and relativeSouthPoint.e) then
+			if (relativeEastPoint and relativeSouthPoint) then
 
-				point.fillSquare = true
+				-- if east.s and south.e, square completed
+				if (relativeEastPoint.s and relativeSouthPoint.e) then
+
+					point.fillSquare = true
+
+				end
 
 			end
 
