@@ -2,37 +2,61 @@
 -- allow multiple lines that complete squares
 
 -- general
-local screenWidth, screenHeight = 400, 400
+local screenWidth, screenHeight = 600, 450
 
 -- board
+local boardWidth, boardHeight = 362, 362
 local masterBoard = {}
 local boardCanvas
 
 -- players
 local currentPlayer
 
+-- UI
+local uiCanvas
+
 function love.load()
 
 	love.window.setMode(screenWidth, screenHeight)
-	boardCanvas = love.graphics.newCanvas(screenWidth, screenHeight)
-	currentPlayer = 1
+	boardCanvas = love.graphics.newCanvas(boardWidth, boardHeight)
+	uiCanvas = love.graphics.newCanvas(screenWidth, screenHeight)
 
-	initBoard(masterBoard, 10, 10)
+	initBoard(masterBoard, 10, 10, boardWidth, boardHeight)
+	currentPlayer = 1
 
 end
 
-function initBoard(board, hPoints, vPoints)
+function initBoard(board, hPoints, vPoints, boardWidth, boardHeight)
 
 	board.hPoints, board.vPoints = hPoints, vPoints
 
-	board.location = 
+	board.graphics = 
 	{
-		w = screenWidth - ((screenWidth / 100) * 10),
-		h = screenHeight - ((screenHeight / 100) * 10)
+		pointSegments = 4,
+		pointColour = { 255, 255, 255 },
+		lineUndrawnColour = { 100, 100, 100 },
+		lineDrawnColour = { 255, 255, 255 },
+		lineHighlightColour = { 0, 255, 0 },
+		squareColour = { 105, 214, 250 },
+		playerColour = { 255, 255, 255 }
 	}
 
-	board.location.x = (screenWidth / 2) - (board.location.w / 2)
-	board.location.y = (screenHeight / 2) - (board.location.h / 2)
+	board.dimensions = {}
+
+	board.dimensions.w = boardWidth
+	board.dimensions.h = boardHeight
+
+	board.dimensions.x = (screenWidth / 2) - (board.dimensions.w / 2)
+	board.dimensions.y = (screenHeight / 2) - (board.dimensions.h / 2)
+
+	board.dimensions.hLineLength = board.dimensions.w / (hPoints - 1)
+	board.dimensions.vLineLength = board.dimensions.h / (vPoints - 1)
+
+	board.dimensions.pointSize = 5
+	board.dimensions.pointW = boardWidth - (board.dimensions.pointSize * 2)
+	board.dimensions.pointH = boardHeight - (board.dimensions.pointSize * 2)
+
+	board.dimensions.playerSize = ((board.dimensions.hLineLength + board.dimensions.vLineLength) / 2) / 6
 
 	board.points = {}
 
@@ -42,8 +66,8 @@ function initBoard(board, hPoints, vPoints)
 
 		for pointY = 0, vPoints - 1 do
 
-			local cartesianX = board.location.x + ((board.location.w / (hPoints - 1)) * pointX)
-			local cartesianY = board.location.y + ((board.location.h / (vPoints - 1)) * pointY)
+			local cartesianX = board.dimensions.pointSize + (board.dimensions.pointW / (hPoints - 1)) * pointX
+			local cartesianY = board.dimensions.pointSize + (board.dimensions.pointH / (vPoints - 1)) * pointY
 
 			board.points[pointCount] = 
 			{
@@ -67,22 +91,6 @@ function initBoard(board, hPoints, vPoints)
 
 	end
 
-	board.graphics = 
-	{
-		pointSize = 5,
-		pointSegments = 4,
-		pointColour = { 255, 255, 255 },
-		lineUndrawnColour = { 100, 100, 100 },
-		lineDrawnColour = { 255, 255, 255 },
-		lineHighlightColour = { 0, 255, 0 },
-		squareColour = { 105, 214, 250 },
-		playerColour = { 255, 255, 255 }
-	}
-
-	board.graphics.hLineLength = board.location.w / (hPoints - 1)
-	board.graphics.vLineLength = board.location.h / (vPoints - 1)
-	board.graphics.playerSize = ((board.graphics.hLineLength + board.graphics.vLineLength) / 2) / 6
-
 	drawBoard(masterBoard)
 
 end
@@ -91,7 +99,7 @@ function love.draw()
 
 	love.graphics.setColor(255, 255, 255)
 	love.graphics.setBlendMode("alpha", "premultiplied")
-	love.graphics.draw(boardCanvas)
+	love.graphics.draw(boardCanvas, masterBoard.dimensions.x, masterBoard.dimensions.y)
 
 end
 
@@ -114,7 +122,7 @@ function drawBoard(board)
 				love.graphics.setColor(board.graphics.lineUndrawnColour)
 			end
 
-			love.graphics.line(point.cartesianX, point.cartesianY, point.cartesianX + board.graphics.hLineLength, point.cartesianY)
+			love.graphics.line(point.cartesianX, point.cartesianY, point.cartesianX + board.dimensions.hLineLength, point.cartesianY)
 
 		end
 
@@ -129,23 +137,23 @@ function drawBoard(board)
 				love.graphics.setColor(board.graphics.lineUndrawnColour)
 			end
 
-			love.graphics.line(point.cartesianX, point.cartesianY, point.cartesianX, point.cartesianY + board.graphics.vLineLength)
+			love.graphics.line(point.cartesianX, point.cartesianY, point.cartesianX, point.cartesianY + board.dimensions.vLineLength)
 
 		end
 
 		-- draw square
 		if (point.fillSquare) then 
 
-			local squareCenterX = point.cartesianX + (board.graphics.hLineLength / 2)
-			local squareCenterY = point.cartesianY + (board.graphics.vLineLength / 2)
+			local squareCenterX = point.cartesianX + (board.dimensions.hLineLength / 2)
+			local squareCenterY = point.cartesianY + (board.dimensions.vLineLength / 2)
 
 			if (point.player == 1) then
 
-				love.graphics.circle("line", squareCenterX, squareCenterY, board.graphics.playerSize, 20)
+				love.graphics.circle("line", squareCenterX, squareCenterY, board.dimensions.playerSize, 20)
 
 			elseif (point.player == 2) then
 
-				local squareSize = board.graphics.playerSize * 2
+				local squareSize = board.dimensions.playerSize * 2
 
 				love.graphics.rectangle("line", squareCenterX - (squareSize / 2), squareCenterY - (squareSize / 2), 
 					squareSize, squareSize)
@@ -156,7 +164,7 @@ function drawBoard(board)
 
 		-- draw point
 		love.graphics.setColor(board.graphics.pointColour)
-		love.graphics.circle("fill", point.cartesianX, point.cartesianY, board.graphics.pointSize, board.graphics.pointSegments)
+		love.graphics.circle("fill", point.cartesianX, point.cartesianY, board.dimensions.pointSize, board.graphics.pointSegments)
 
 	end
 
@@ -166,14 +174,20 @@ end
 
 function love.mousemoved(x, y)
 
-	highlightLine(masterBoard, x, y)
+	local relativeX = x - masterBoard.dimensions.x
+	local relativeY = y - masterBoard.dimensions.y
+
+	highlightLine(masterBoard, relativeX, relativeY)
 	drawBoard(masterBoard)
 
 end
 
 function love.mousepressed(x, y)
 
-	updateLines(masterBoard, x, y)
+	local relativeX = x - masterBoard.dimensions.x
+	local relativeY = y - masterBoard.dimensions.y
+
+	updateLines(masterBoard, relativeX, relativeY)
 	updateSquares()
 	drawBoard(masterBoard)
 
@@ -247,7 +261,7 @@ function eastLineCollision(board, point, x, y)
 
 	if (not closeToAdjacentPoints(board, point, "east", x, y)) then
 
-		if (x > point.cartesianX) and (x < point.cartesianX + board.graphics.hLineLength) then
+		if (x > point.cartesianX) and (x < point.cartesianX + board.dimensions.hLineLength) then
 
 			local yOffset = y - point.cartesianY
 
@@ -269,7 +283,7 @@ function southLineCollision(board, point, x, y)
 
 	if (not closeToAdjacentPoints(board, point, "south", x, y)) then
 
-		if (y > point.cartesianY) and (y < point.cartesianY + board.graphics.vLineLength) then
+		if (y > point.cartesianY) and (y < point.cartesianY + board.dimensions.vLineLength) then
 
 			local xOffset = x - point.cartesianX
 
