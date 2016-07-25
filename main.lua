@@ -2,10 +2,10 @@
 -- allow multiple lines that complete squares
 
 -- general
-local screenWidth, screenHeight = 600, 450
+local screenWidth, screenHeight = 600, 450 -- 4:3
 
 -- board
-local boardWidth, boardHeight = 362, 362
+local boardWidth, boardHeight = math.ceil(screenWidth / 1.65), math.ceil(screenWidth / 1.65)
 local masterBoard = {}
 local boardCanvas
 
