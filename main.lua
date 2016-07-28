@@ -10,6 +10,7 @@ end
 
 -- general
 local screenWidth, screenHeight = 600, 450 -- 4:3
+local uiFont, boardFont
 
 -- board
 local boardWidth, boardHeight = round(screenWidth / 1.65), round(screenWidth / 1.65)
@@ -26,7 +27,9 @@ local uiCanvas
 function love.load()
 
 	love.window.setMode(screenWidth, screenHeight)
-	love.graphics.setFont(love.graphics.newFont("Early GameBoy.ttf", 24))
+	
+	uiFont = love.graphics.newFont("Early GameBoy.ttf", 24)
+	boardFont = love.graphics.newFont("Early GameBoy.ttf", 16)
 
 	boardCanvas = love.graphics.newCanvas(boardWidth, boardHeight)
 	uiCanvas = love.graphics.newCanvas(screenWidth, screenHeight)
@@ -66,6 +69,9 @@ function initBoard(board, hPoints, vPoints, boardWidth, boardHeight)
 	board.dimensions.pointSize = 5
 	board.dimensions.pointW = boardWidth - (board.dimensions.pointSize * 2)
 	board.dimensions.pointH = boardHeight - (board.dimensions.pointSize * 2)
+
+	board.dimensions.textWidth = boardFont:getWidth("X")
+	board.dimensions.textHeight = boardFont:getHeight("X")
 
 	board.points = {}
 
@@ -111,8 +117,8 @@ function initUI(UI, uiWidth, uiHeight)
 	UI.dimensions.w = uiWidth
 	UI.dimensions.h = uiHeight
 
-	UI.dimensions.textWidth = love.graphics.getFont():getWidth("X")
-	UI.dimensions.textHeight = love.graphics.getFont():getHeight("X")
+	UI.dimensions.textWidth = uiFont:getWidth("X")
+	UI.dimensions.textHeight = uiFont:getHeight("X")
 	UI.dimensions.spacing = 20
 
 	UI.dimensions.playerOneUIx = (masterBoard.dimensions.x / 2) - (UI.dimensions.textWidth / 2)
@@ -184,11 +190,13 @@ function drawBoard(board)
 		-- draw square
 		if (point.fillSquare) then 
 
+			love.graphics.setFont(boardFont)
+
 			local squareCenterX = point.cartesianX + (board.dimensions.hLineLength / 2)
 			local squareCenterY = point.cartesianY + (board.dimensions.vLineLength / 2)
 
-			local textX = round(squareCenterX - (masterUI.dimensions.textWidth / 2))
-			local textY = round(squareCenterY - (masterUI.dimensions.textHeight / 2))
+			local textX = round(squareCenterX - (masterBoard.dimensions.textWidth / 2))
+			local textY = round(squareCenterY - (masterBoard.dimensions.textHeight / 2))
 
 			if (point.player == 1) then
 
@@ -217,6 +225,8 @@ function drawUI(ui)
 	love.graphics.setCanvas(uiCanvas)
 	love.graphics.clear()
 	love.graphics.setBlendMode("alpha")
+
+	love.graphics.setFont(uiFont)
 
 	love.graphics.print("X", masterUI.dimensions.playerOneUIx, masterUI.dimensions.sigilY, 0)
 	love.graphics.print(tostring(gameData.playerOneScore), masterUI.dimensions.playerOneUIx, masterUI.dimensions.scoreY, 0)
