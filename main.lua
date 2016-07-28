@@ -15,11 +15,10 @@ local boardWidth, boardHeight = round(screenWidth / 1.65), round(screenWidth / 1
 
 local masterBoard = {}
 local masterUI = {}
+local masterGameData = {}
 
 local boardCanvas
 local uiCanvas
-
-local masterGameData = {}
 
 -- main
 function love.load()
