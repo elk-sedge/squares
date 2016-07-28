@@ -1,6 +1,3 @@
--- allow one line anywhere
--- allow multiple lines that complete squares
-
 -- helpers
 function round(x)
 
@@ -136,12 +133,16 @@ function initGameData(gameData)
 	gameData[1] = 
 	{
 		score = 0,
+		completedSquare = false,
+		lineAllowed = true,
 		sigil = "X"
 	}
 
 	gameData[2] = 
 	{
 		score = 0,
+		completedSquare = false,
+		lineAllowed = true,
 		sigil = "0"
 	}
 
@@ -249,21 +250,32 @@ function love.mousemoved(x, y)
 	local relativeX = x - masterBoard.dimensions.x
 	local relativeY = y - masterBoard.dimensions.y
 
-	highlightLine(masterBoard, relativeX, relativeY)
+	if (masterGameData.currentPlayer.lineAllowed) then
+
+		highlightLine(masterBoard, relativeX, relativeY)
+
+	end
+
 	drawBoard(masterBoard, masterGameData)
 
 end
 
 function love.mousepressed(x, y)
 
-	local relativeX = x - masterBoard.dimensions.x
-	local relativeY = y - masterBoard.dimensions.y
+	if (masterGameData.currentPlayer.lineAllowed) then
 
-	updateLines(masterBoard, relativeX, relativeY)
-	updateSquares()
+		local relativeX = x - masterBoard.dimensions.x
+		local relativeY = y - masterBoard.dimensions.y
 
-	drawBoard(masterBoard, masterGameData)
-	drawUI(masterUI, masterGameData)
+		updateLines(masterBoard, relativeX, relativeY)
+		updateSquares(masterBoard, masterGameData)
+
+		drawBoard(masterBoard, masterGameData)
+		drawUI(masterUI, masterGameData)
+
+		completeMove(masterGameData)
+
+	end
 
 end
 
@@ -445,15 +457,17 @@ function closeToPoint(point, x, y)
 
 end
 
-function updateSquares()
+function updateSquares(board, gameData)
 
-	for pointIndex, point in ipairs(masterBoard.points) do
+	gameData.currentPlayer.completedSquare = false
+
+	for pointIndex, point in ipairs(board.points) do
 
 		-- if point.e and point.s, get index of east and south points
 		if (point.e and point.s) then
 
-			local relativeEastPoint = masterBoard.points[pointIndex + masterBoard.vPoints]
-			local relativeSouthPoint = masterBoard.points[pointIndex + 1]
+			local relativeEastPoint = board.points[pointIndex + board.vPoints]
+			local relativeSouthPoint = board.points[pointIndex + 1]
 
 			if (relativeEastPoint and relativeSouthPoint) then
 
@@ -463,8 +477,8 @@ function updateSquares()
 					if (not point.fillSquare) then
 
 						point.fillSquare = true
-						point.player = masterGameData.currentPlayer
-						updateScore(masterGameData)
+						point.player = gameData.currentPlayer
+						updateScore(gameData)
 
 					end
 
@@ -481,6 +495,21 @@ end
 function updateScore(gameData)
 
 	gameData.currentPlayer.score = gameData.currentPlayer.score + 1
+	gameData.currentPlayer.completedSquare = true
+
+end
+
+function completeMove(gameData)
+
+	if (not gameData.currentPlayer.completedSquare) then
+
+		gameData.currentPlayer.lineAllowed = false
+
+	else
+
+		gameData.currentPlayer.lineAllowed = true
+
+	end
 
 end
 
@@ -505,5 +534,8 @@ function switchPlayer(gameData)
 		gameData.currentPlayer = gameData[1]
 
 	end
+
+	gameData.currentPlayer.squareCompleted = false
+	gameData.currentPlayer.lineAllowed = true
 
 end
