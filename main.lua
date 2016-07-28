@@ -1,6 +1,7 @@
 -- allow one line anywhere
 -- allow multiple lines that complete squares
 
+-- helpers
 function round(x)
 
 	local mult = 10^(0)
@@ -8,33 +9,27 @@ function round(x)
 
 end
 
--- general
+-- global
 local screenWidth, screenHeight = 600, 450 -- 4:3
-local uiFont, boardFont
-
--- board
 local boardWidth, boardHeight = round(screenWidth / 1.65), round(screenWidth / 1.65)
+
 local masterBoard = {}
-local boardCanvas
-
--- players
-local gameData = {}
-
--- UI
 local masterUI = {}
+
+local boardCanvas
 local uiCanvas
 
+local masterGameData = {}
+
+-- main
 function love.load()
 
 	love.window.setMode(screenWidth, screenHeight)
-	
-	uiFont = love.graphics.newFont("Early GameBoy.ttf", 24)
-	boardFont = love.graphics.newFont("Early GameBoy.ttf", 16)
 
 	boardCanvas = love.graphics.newCanvas(boardWidth, boardHeight)
 	uiCanvas = love.graphics.newCanvas(screenWidth, screenHeight)
 
-	initGameData(gameData)
+	initGameData(masterGameData)
 	initBoard(masterBoard, 10, 10, boardWidth, boardHeight)
 	initUI(masterUI, screenWidth, screenHeight)
 
@@ -52,7 +47,8 @@ function initBoard(board, hPoints, vPoints, boardWidth, boardHeight)
 		lineDrawnColour = { 255, 255, 255 },
 		lineHighlightColour = { 0, 255, 0 },
 		squareColour = { 105, 214, 250 },
-		playerColour = { 255, 255, 255 }
+		playerColour = { 255, 255, 255 },
+		font = love.graphics.newFont("Early GameBoy.ttf", 16)
 	}
 
 	board.dimensions = {}
@@ -70,8 +66,8 @@ function initBoard(board, hPoints, vPoints, boardWidth, boardHeight)
 	board.dimensions.pointW = boardWidth - (board.dimensions.pointSize * 2)
 	board.dimensions.pointH = boardHeight - (board.dimensions.pointSize * 2)
 
-	board.dimensions.textWidth = boardFont:getWidth("X")
-	board.dimensions.textHeight = boardFont:getHeight("X")
+	board.dimensions.textWidth = board.graphics.font:getWidth("X")
+	board.dimensions.textHeight = board.graphics.font:getHeight("X")
 
 	board.points = {}
 
@@ -106,19 +102,24 @@ function initBoard(board, hPoints, vPoints, boardWidth, boardHeight)
 
 	end
 
-	drawBoard(masterBoard)
+	drawBoard(masterBoard, masterGameData)
 
 end
 
 function initUI(UI, uiWidth, uiHeight)
+
+	UI.graphics = 
+	{
+		font = love.graphics.newFont("Early GameBoy.ttf", 24)
+	}
 
 	UI.dimensions = {}
 
 	UI.dimensions.w = uiWidth
 	UI.dimensions.h = uiHeight
 
-	UI.dimensions.textWidth = uiFont:getWidth("X")
-	UI.dimensions.textHeight = uiFont:getHeight("X")
+	UI.dimensions.textWidth = UI.graphics.font:getWidth("X")
+	UI.dimensions.textHeight = UI.graphics.font:getHeight("X")
 	UI.dimensions.spacing = 20
 
 	UI.dimensions.playerOneUIx = (masterBoard.dimensions.x / 2) - (UI.dimensions.textWidth / 2)
@@ -127,15 +128,25 @@ function initUI(UI, uiWidth, uiHeight)
 	UI.dimensions.sigilY = (screenHeight / 2) - (UI.dimensions.textHeight + UI.dimensions.spacing)
 	UI.dimensions.scoreY = (screenHeight / 2) + UI.dimensions.spacing
 
-	drawUI(masterUI)
+	drawUI(masterUI, masterGameData)
 
 end
 
 function initGameData(gameData)
 
-	gameData.currentPlayer = 1
-	gameData.playerOneScore = 0
-	gameData.playerTwoScore = 0
+	gameData[1] = 
+	{
+		score = 0,
+		sigil = "X"
+	}
+
+	gameData[2] = 
+	{
+		score = 0,
+		sigil = "0"
+	}
+
+	gameData.currentPlayer = gameData[1]
 
 end
 
@@ -149,7 +160,7 @@ function love.draw()
 
 end
 
-function drawBoard(board)
+function drawBoard(board, gameData)
 
 	love.graphics.setCanvas(boardCanvas)
 	love.graphics.clear()
@@ -190,7 +201,7 @@ function drawBoard(board)
 		-- draw square
 		if (point.fillSquare) then 
 
-			love.graphics.setFont(boardFont)
+			love.graphics.setFont(board.graphics.font)
 
 			local squareCenterX = point.cartesianX + (board.dimensions.hLineLength / 2)
 			local squareCenterY = point.cartesianY + (board.dimensions.vLineLength / 2)
@@ -198,14 +209,10 @@ function drawBoard(board)
 			local textX = round(squareCenterX - (masterBoard.dimensions.textWidth / 2))
 			local textY = round(squareCenterY - (masterBoard.dimensions.textHeight / 2))
 
-			if (point.player == 1) then
-
-				love.graphics.print("X", textX, textY)
-
-			elseif (point.player == 2) then
-
-				love.graphics.print("0", textX, textY)
-
+			if (point.player == gameData[1]) then
+				love.graphics.print(gameData[1].sigil, textX, textY)
+			elseif (point.player == gameData[2]) then
+				love.graphics.print(gameData[2].sigil, textX, textY)
 			end
 
 		end
@@ -220,19 +227,19 @@ function drawBoard(board)
 
 end
 
-function drawUI(ui)
+function drawUI(ui, gameData)
 
 	love.graphics.setCanvas(uiCanvas)
 	love.graphics.clear()
 	love.graphics.setBlendMode("alpha")
 
-	love.graphics.setFont(uiFont)
+	love.graphics.setFont(ui.graphics.font)
 
-	love.graphics.print("X", masterUI.dimensions.playerOneUIx, masterUI.dimensions.sigilY, 0)
-	love.graphics.print(tostring(gameData.playerOneScore), masterUI.dimensions.playerOneUIx, masterUI.dimensions.scoreY, 0)
+	love.graphics.print(gameData[1].sigil, ui.dimensions.playerOneUIx, ui.dimensions.sigilY, 0)
+	love.graphics.print(tostring(gameData[1].score), ui.dimensions.playerOneUIx, ui.dimensions.scoreY, 0)
 
-	love.graphics.print("O", masterUI.dimensions.playerTwoUIx, masterUI.dimensions.sigilY, 0)
-	love.graphics.print(tostring(gameData.playerTwoScore), masterUI.dimensions.playerTwoUIx, masterUI.dimensions.scoreY, 0)
+	love.graphics.print(gameData[2].sigil, ui.dimensions.playerTwoUIx, ui.dimensions.sigilY, 0)
+	love.graphics.print(tostring(gameData[2].score), ui.dimensions.playerTwoUIx, ui.dimensions.scoreY, 0)
 
 	love.graphics.setCanvas()
 
@@ -244,7 +251,7 @@ function love.mousemoved(x, y)
 	local relativeY = y - masterBoard.dimensions.y
 
 	highlightLine(masterBoard, relativeX, relativeY)
-	drawBoard(masterBoard)
+	drawBoard(masterBoard, masterGameData)
 
 end
 
@@ -256,8 +263,8 @@ function love.mousepressed(x, y)
 	updateLines(masterBoard, relativeX, relativeY)
 	updateSquares()
 
-	drawBoard(masterBoard)
-	drawUI(masterUI)
+	drawBoard(masterBoard, masterGameData)
+	drawUI(masterUI, masterGameData)
 
 end
 
@@ -457,8 +464,8 @@ function updateSquares()
 					if (not point.fillSquare) then
 
 						point.fillSquare = true
-						point.player = gameData.currentPlayer
-						updateScore(gameData.currentPlayer)
+						point.player = masterGameData.currentPlayer
+						updateScore(masterGameData)
 
 					end
 
@@ -472,17 +479,9 @@ function updateSquares()
 
 end
 
-function updateScore(currentPlayer)
+function updateScore(gameData)
 
-	if (currentPlayer == 1) then
-
-		gameData.playerOneScore = gameData.playerOneScore + 1
-
-	elseif (currentPlayer == 2) then
-
-		gameData.playerTwoScore = gameData.playerTwoScore + 1
-
-	end
+	gameData.currentPlayer.score = gameData.currentPlayer.score + 1
 
 end
 
@@ -490,7 +489,21 @@ function love.keypressed(key)
 
 	if (key == "space") then
 
-		if gameData.currentPlayer == 1 then gameData.currentPlayer = 2 elseif gameData.currentPlayer == 2 then gameData.currentPlayer = 1 end
+		switchPlayer(masterGameData)
+
+	end
+
+end
+
+function switchPlayer(gameData)
+
+	if (gameData.currentPlayer == gameData[1]) then
+
+		gameData.currentPlayer = gameData[2]
+
+	elseif (gameData.currentPlayer == gameData[2]) then
+
+		gameData.currentPlayer = gameData[1]
 
 	end
 
