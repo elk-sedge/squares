@@ -1,28 +1,39 @@
 -- allow one line anywhere
 -- allow multiple lines that complete squares
 
+function round(x)
+
+	local mult = 10^(0)
+	return math.floor(x * mult + 0.5) / mult
+
+end
+
 -- general
 local screenWidth, screenHeight = 600, 450 -- 4:3
 
 -- board
-local boardWidth, boardHeight = math.ceil(screenWidth / 1.65), math.ceil(screenWidth / 1.65)
+local boardWidth, boardHeight = round(screenWidth / 1.65), round(screenWidth / 1.65)
 local masterBoard = {}
 local boardCanvas
 
 -- players
-local currentPlayer
+local gameData = {}
 
 -- UI
+local masterUI = {}
 local uiCanvas
 
 function love.load()
 
 	love.window.setMode(screenWidth, screenHeight)
+	love.graphics.setFont(love.graphics.newFont("Early GameBoy.ttf", 24))
+
 	boardCanvas = love.graphics.newCanvas(boardWidth, boardHeight)
 	uiCanvas = love.graphics.newCanvas(screenWidth, screenHeight)
 
+	initGameData(gameData)
 	initBoard(masterBoard, 10, 10, boardWidth, boardHeight)
-	currentPlayer = 1
+	initUI(masterUI, screenWidth, screenHeight)
 
 end
 
@@ -49,14 +60,12 @@ function initBoard(board, hPoints, vPoints, boardWidth, boardHeight)
 	board.dimensions.x = (screenWidth / 2) - (board.dimensions.w / 2)
 	board.dimensions.y = (screenHeight / 2) - (board.dimensions.h / 2)
 
-	board.dimensions.hLineLength = board.dimensions.w / (hPoints - 1)
-	board.dimensions.vLineLength = board.dimensions.h / (vPoints - 1)
+	board.dimensions.hLineLength = round(board.dimensions.w / (hPoints - 1))
+	board.dimensions.vLineLength = round(board.dimensions.h / (vPoints - 1))
 
 	board.dimensions.pointSize = 5
 	board.dimensions.pointW = boardWidth - (board.dimensions.pointSize * 2)
 	board.dimensions.pointH = boardHeight - (board.dimensions.pointSize * 2)
-
-	board.dimensions.playerSize = ((board.dimensions.hLineLength + board.dimensions.vLineLength) / 2) / 6
 
 	board.points = {}
 
@@ -66,8 +75,8 @@ function initBoard(board, hPoints, vPoints, boardWidth, boardHeight)
 
 		for pointY = 0, vPoints - 1 do
 
-			local cartesianX = board.dimensions.pointSize + (board.dimensions.pointW / (hPoints - 1)) * pointX
-			local cartesianY = board.dimensions.pointSize + (board.dimensions.pointH / (vPoints - 1)) * pointY
+			local cartesianX = round(board.dimensions.pointSize + (board.dimensions.pointW / (hPoints - 1)) * pointX)
+			local cartesianY = round(board.dimensions.pointSize + (board.dimensions.pointH / (vPoints - 1)) * pointY)
 
 			board.points[pointCount] = 
 			{
@@ -95,10 +104,41 @@ function initBoard(board, hPoints, vPoints, boardWidth, boardHeight)
 
 end
 
+function initUI(UI, uiWidth, uiHeight)
+
+	UI.dimensions = {}
+
+	UI.dimensions.w = uiWidth
+	UI.dimensions.h = uiHeight
+
+	UI.dimensions.textWidth = love.graphics.getFont():getWidth("X")
+	UI.dimensions.textHeight = love.graphics.getFont():getHeight("X")
+	UI.dimensions.spacing = 20
+
+	UI.dimensions.playerOneUIx = (masterBoard.dimensions.x / 2) - (UI.dimensions.textWidth / 2)
+	UI.dimensions.playerTwoUIx = (masterBoard.dimensions.x + masterBoard.dimensions.w) + (masterBoard.dimensions.x / 2) - (UI.dimensions.textWidth / 2)
+
+	UI.dimensions.sigilY = (screenHeight / 2) - (UI.dimensions.textHeight + UI.dimensions.spacing)
+	UI.dimensions.scoreY = (screenHeight / 2) + UI.dimensions.spacing
+
+	drawUI(masterUI)
+
+end
+
+function initGameData(gameData)
+
+	gameData.currentPlayer = 1
+	gameData.playerOneScore = 0
+	gameData.playerTwoScore = 0
+
+end
+
 function love.draw()	
 
 	love.graphics.setColor(255, 255, 255)
 	love.graphics.setBlendMode("alpha", "premultiplied")
+
+	love.graphics.draw(uiCanvas, 0, 0)
 	love.graphics.draw(boardCanvas, masterBoard.dimensions.x, masterBoard.dimensions.y)
 
 end
@@ -147,16 +187,16 @@ function drawBoard(board)
 			local squareCenterX = point.cartesianX + (board.dimensions.hLineLength / 2)
 			local squareCenterY = point.cartesianY + (board.dimensions.vLineLength / 2)
 
+			local textX = round(squareCenterX - (masterUI.dimensions.textWidth / 2))
+			local textY = round(squareCenterY - (masterUI.dimensions.textHeight / 2))
+
 			if (point.player == 1) then
 
-				love.graphics.circle("line", squareCenterX, squareCenterY, board.dimensions.playerSize, 20)
+				love.graphics.print("X", textX, textY)
 
 			elseif (point.player == 2) then
 
-				local squareSize = board.dimensions.playerSize * 2
-
-				love.graphics.rectangle("line", squareCenterX - (squareSize / 2), squareCenterY - (squareSize / 2), 
-					squareSize, squareSize)
+				love.graphics.print("0", textX, textY)
 
 			end
 
@@ -167,6 +207,22 @@ function drawBoard(board)
 		love.graphics.circle("fill", point.cartesianX, point.cartesianY, board.dimensions.pointSize, board.graphics.pointSegments)
 
 	end
+
+	love.graphics.setCanvas()
+
+end
+
+function drawUI(ui)
+
+	love.graphics.setCanvas(uiCanvas)
+	love.graphics.clear()
+	love.graphics.setBlendMode("alpha")
+
+	love.graphics.print("X", masterUI.dimensions.playerOneUIx, masterUI.dimensions.sigilY, 0)
+	love.graphics.print(tostring(gameData.playerOneScore), masterUI.dimensions.playerOneUIx, masterUI.dimensions.scoreY, 0)
+
+	love.graphics.print("O", masterUI.dimensions.playerTwoUIx, masterUI.dimensions.sigilY, 0)
+	love.graphics.print(tostring(gameData.playerTwoScore), masterUI.dimensions.playerTwoUIx, masterUI.dimensions.scoreY, 0)
 
 	love.graphics.setCanvas()
 
@@ -189,7 +245,9 @@ function love.mousepressed(x, y)
 
 	updateLines(masterBoard, relativeX, relativeY)
 	updateSquares()
+
 	drawBoard(masterBoard)
+	drawUI(masterUI)
 
 end
 
@@ -389,7 +447,8 @@ function updateSquares()
 					if (not point.fillSquare) then
 
 						point.fillSquare = true
-						point.player = currentPlayer
+						point.player = gameData.currentPlayer
+						updateScore(gameData.currentPlayer)
 
 					end
 
@@ -403,11 +462,25 @@ function updateSquares()
 
 end
 
+function updateScore(currentPlayer)
+
+	if (currentPlayer == 1) then
+
+		gameData.playerOneScore = gameData.playerOneScore + 1
+
+	elseif (currentPlayer == 2) then
+
+		gameData.playerTwoScore = gameData.playerTwoScore + 1
+
+	end
+
+end
+
 function love.keypressed(key)
 
 	if (key == "space") then
 
-		if currentPlayer == 1 then currentPlayer = 2 elseif currentPlayer == 2 then currentPlayer = 1 end
+		if gameData.currentPlayer == 1 then gameData.currentPlayer = 2 elseif gameData.currentPlayer == 2 then gameData.currentPlayer = 1 end
 
 	end
 
