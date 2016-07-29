@@ -541,7 +541,7 @@ end
 
 function switchPlayer(gameData, ui)
 
-	if (gameData.currentPlayer.lineDrawn) then
+	if (gameData.currentPlayer.lineDrawn and not gameData.currentPlayer.completedSquare) then
 
 		if (gameData.currentPlayer == gameData[1]) then
 
@@ -553,9 +553,9 @@ function switchPlayer(gameData, ui)
 
 		end
 
-		gameData.currentPlayer.squareCompleted = false
 		gameData.currentPlayer.lineAllowed = true
 		gameData.currentPlayer.lineDrawn = false
+		gameData.currentPlayer.completedSquare = false
 
 		drawUI(ui, gameData)
 
