@@ -136,7 +136,6 @@ function initGameData(gameData)
 	{
 		score = 0,
 		completedSquare = false,
-		lineAllowed = true,
 		lineDrawn = false,
 		sigil = "X"
 	}
@@ -145,7 +144,6 @@ function initGameData(gameData)
 	{
 		score = 0,
 		completedSquare = false,
-		lineAllowed = true,
 		lineDrawn = false,
 		sigil = "0"
 	}
@@ -260,34 +258,25 @@ function love.mousemoved(x, y)
 	local relativeX = x - masterBoard.dimensions.x
 	local relativeY = y - masterBoard.dimensions.y
 
-	if (masterGameData.currentPlayer.lineAllowed) then
-
-		highlightLine(masterBoard, relativeX, relativeY)
-
-	end
-
+	highlightLine(masterBoard, relativeX, relativeY)
 	drawBoard(masterBoard, masterGameData)
 
 end
 
 function love.mousepressed(x, y)
 
-	if (masterGameData.currentPlayer.lineAllowed) then
+	local relativeX = x - masterBoard.dimensions.x
+	local relativeY = y - masterBoard.dimensions.y
 
-		local relativeX = x - masterBoard.dimensions.x
-		local relativeY = y - masterBoard.dimensions.y
+	updateLines(masterBoard, relativeX, relativeY)
+	updateSquares(masterBoard, masterGameData)
 
-		updateLines(masterBoard, relativeX, relativeY)
-		updateSquares(masterBoard, masterGameData)
+	drawBoard(masterBoard, masterGameData)
+	drawUI(masterUI, masterGameData)
 
-		drawBoard(masterBoard, masterGameData)
-		drawUI(masterUI, masterGameData)
+	if (masterGameData.currentPlayer.lineDrawn) then
 
-		if (masterGameData.currentPlayer.lineDrawn) then
-
-			completeMove(masterGameData)
-
-		end
+		completeMove(masterGameData, masterUI)
 
 	end
 
@@ -515,25 +504,15 @@ function updateScore(gameData)
 
 end
 
-function completeMove(gameData)
+function completeMove(gameData, ui)
 
 	if (not gameData.currentPlayer.completedSquare) then
 
-		gameData.currentPlayer.lineAllowed = false
+		if (gameData.currentPlayer.lineDrawn) then
 
-	else
+			switchPlayer(gameData, ui)
 
-		gameData.currentPlayer.lineAllowed = true
-
-	end
-
-end
-
-function love.keypressed(key)
-
-	if (key == "space") then
-
-		switchPlayer(masterGameData, masterUI)
+		end
 
 	end
 
@@ -541,24 +520,19 @@ end
 
 function switchPlayer(gameData, ui)
 
-	if (gameData.currentPlayer.lineDrawn and not gameData.currentPlayer.completedSquare) then
+	if (gameData.currentPlayer == gameData[1]) then
 
-		if (gameData.currentPlayer == gameData[1]) then
+		gameData.currentPlayer = gameData[2]
 
-			gameData.currentPlayer = gameData[2]
+	elseif (gameData.currentPlayer == gameData[2]) then
 
-		elseif (gameData.currentPlayer == gameData[2]) then
-
-			gameData.currentPlayer = gameData[1]
-
-		end
-
-		gameData.currentPlayer.lineAllowed = true
-		gameData.currentPlayer.lineDrawn = false
-		gameData.currentPlayer.completedSquare = false
-
-		drawUI(ui, gameData)
+		gameData.currentPlayer = gameData[1]
 
 	end
+
+	gameData.currentPlayer.lineDrawn = false
+	gameData.currentPlayer.completedSquare = false
+
+	drawUI(ui, gameData)
 
 end
