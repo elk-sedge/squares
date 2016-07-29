@@ -277,13 +277,13 @@ function love.mousepressed(x, y)
 		local relativeX = x - masterBoard.dimensions.x
 		local relativeY = y - masterBoard.dimensions.y
 
-		if (relativeX >= -4 and relativeY >= -4) then
+		updateLines(masterBoard, relativeX, relativeY)
+		updateSquares(masterBoard, masterGameData)
 
-			updateLines(masterBoard, relativeX, relativeY)
-			updateSquares(masterBoard, masterGameData)
+		drawBoard(masterBoard, masterGameData)
+		drawUI(masterUI, masterGameData)
 
-			drawBoard(masterBoard, masterGameData)
-			drawUI(masterUI, masterGameData)
+		if (masterGameData.currentPlayer.lineDrawn) then
 
 			completeMove(masterGameData)
 
