@@ -41,7 +41,7 @@ function initBoard(board, hPoints, vPoints, boardWidth, boardHeight)
 		pointColour = { 255, 255, 255 },
 		lineUndrawnColour = { 100, 100, 100 },
 		lineDrawnColour = { 255, 255, 255 },
-		lineHighlightColour = { 0, 255, 0 },
+		lineHighlightColour = { 0, 255, 255 },
 		squareColour = { 105, 214, 250 },
 		playerColour = { 255, 255, 255 },
 		font = love.graphics.newFont("Early GameBoy.ttf", 16)
@@ -106,7 +106,9 @@ function initUI(UI, uiWidth, uiHeight)
 
 	UI.graphics = 
 	{
-		font = love.graphics.newFont("Early GameBoy.ttf", 24)
+		font = love.graphics.newFont("Early GameBoy.ttf", 24),
+		fontColour = { 255, 255, 255 },
+		fontHighlightColour = { 0, 255, 255 }
 	}
 
 	UI.dimensions = {}
@@ -135,6 +137,7 @@ function initGameData(gameData)
 		score = 0,
 		completedSquare = false,
 		lineAllowed = true,
+		lineDrawn = false,
 		sigil = "X"
 	}
 
@@ -143,6 +146,7 @@ function initGameData(gameData)
 		score = 0,
 		completedSquare = false,
 		lineAllowed = true,
+		lineDrawn = false,
 		sigil = "0"
 	}
 
@@ -235,8 +239,14 @@ function drawUI(ui, gameData)
 
 	love.graphics.setFont(ui.graphics.font)
 
+	love.graphics.setColor(ui.graphics.fontColour)
+	if (gameData.currentPlayer == gameData[1]) then love.graphics.setColor(ui.graphics.fontHighlightColour) end
+
 	love.graphics.print(gameData[1].sigil, ui.dimensions.playerOneUIx, ui.dimensions.sigilY, 0)
 	love.graphics.print(tostring(gameData[1].score), ui.dimensions.playerOneUIx, ui.dimensions.scoreY, 0)
+
+	love.graphics.setColor(ui.graphics.fontColour)
+	if (gameData.currentPlayer == gameData[2]) then love.graphics.setColor(ui.graphics.fontHighlightColour) end
 
 	love.graphics.print(gameData[2].sigil, ui.dimensions.playerTwoUIx, ui.dimensions.sigilY, 0)
 	love.graphics.print(tostring(gameData[2].score), ui.dimensions.playerTwoUIx, ui.dimensions.scoreY, 0)
@@ -267,13 +277,17 @@ function love.mousepressed(x, y)
 		local relativeX = x - masterBoard.dimensions.x
 		local relativeY = y - masterBoard.dimensions.y
 
-		updateLines(masterBoard, relativeX, relativeY)
-		updateSquares(masterBoard, masterGameData)
+		if (relativeX >= -4 and relativeY >= -4) then
 
-		drawBoard(masterBoard, masterGameData)
-		drawUI(masterUI, masterGameData)
+			updateLines(masterBoard, relativeX, relativeY)
+			updateSquares(masterBoard, masterGameData)
 
-		completeMove(masterGameData)
+			drawBoard(masterBoard, masterGameData)
+			drawUI(masterUI, masterGameData)
+
+			completeMove(masterGameData)
+
+		end
 
 	end
 
@@ -323,6 +337,7 @@ function updateLines(board, x, y)
 
 				point.e = eastLineCollision(board, point, x, y)
 				lineDrawn = point.e
+				masterGameData.currentPlayer.lineDrawn = lineDrawn
 
 			end
 
@@ -334,6 +349,7 @@ function updateLines(board, x, y)
 
 				point.s = southLineCollision(board, point, x, y)
 				lineDrawn = point.s
+				masterGameData.currentPlayer.lineDrawn = lineDrawn
 
 			end
 
@@ -517,25 +533,32 @@ function love.keypressed(key)
 
 	if (key == "space") then
 
-		switchPlayer(masterGameData)
+		switchPlayer(masterGameData, masterUI)
 
 	end
 
 end
 
-function switchPlayer(gameData)
+function switchPlayer(gameData, ui)
 
-	if (gameData.currentPlayer == gameData[1]) then
+	if (gameData.currentPlayer.lineDrawn) then
 
-		gameData.currentPlayer = gameData[2]
+		if (gameData.currentPlayer == gameData[1]) then
 
-	elseif (gameData.currentPlayer == gameData[2]) then
+			gameData.currentPlayer = gameData[2]
 
-		gameData.currentPlayer = gameData[1]
+		elseif (gameData.currentPlayer == gameData[2]) then
+
+			gameData.currentPlayer = gameData[1]
+
+		end
+
+		gameData.currentPlayer.squareCompleted = false
+		gameData.currentPlayer.lineAllowed = true
+		gameData.currentPlayer.lineDrawn = false
+
+		drawUI(ui, gameData)
 
 	end
-
-	gameData.currentPlayer.squareCompleted = false
-	gameData.currentPlayer.lineAllowed = true
 
 end
