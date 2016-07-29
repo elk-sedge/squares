@@ -1,38 +1,69 @@
--- allow one line anywhere
--- allow multiple lines that complete squares
+-- helpers
+function round(x)
 
--- general
-local screenWidth, screenHeight = 400, 400
-
--- board
-local masterBoard = {}
-local boardCanvas
-
--- players
-local currentPlayer
-
-function love.load()
-
-	love.window.setMode(screenWidth, screenHeight)
-	boardCanvas = love.graphics.newCanvas(screenWidth, screenHeight)
-	currentPlayer = 1
-
-	initBoard(masterBoard, 10, 10)
+	local mult = 10^(0)
+	return math.floor(x * mult + 0.5) / mult
 
 end
 
-function initBoard(board, hPoints, vPoints)
+-- global
+local screenWidth, screenHeight = 600, 450 -- 4:3
+local boardWidth, boardHeight = round(screenWidth / 1.65), round(screenWidth / 1.65)
+
+local masterBoard = {}
+local masterUI = {}
+local masterGameData = {}
+
+local boardCanvas
+local uiCanvas
+
+-- main
+function love.load()
+
+	love.window.setMode(screenWidth, screenHeight)
+
+	boardCanvas = love.graphics.newCanvas(boardWidth, boardHeight)
+	uiCanvas = love.graphics.newCanvas(screenWidth, screenHeight)
+
+	initGameData(masterGameData)
+	initBoard(masterBoard, 10, 10, boardWidth, boardHeight)
+	initUI(masterUI, screenWidth, screenHeight)
+
+end
+
+function initBoard(board, hPoints, vPoints, boardWidth, boardHeight)
 
 	board.hPoints, board.vPoints = hPoints, vPoints
 
-	board.location = 
+	board.graphics = 
 	{
-		w = screenWidth - ((screenWidth / 100) * 10),
-		h = screenHeight - ((screenHeight / 100) * 10)
+		pointSegments = 4,
+		pointColour = { 255, 255, 255 },
+		lineUndrawnColour = { 100, 100, 100 },
+		lineDrawnColour = { 255, 255, 255 },
+		lineHighlightColour = { 0, 255, 255 },
+		squareColour = { 105, 214, 250 },
+		playerColour = { 255, 255, 255 },
+		font = love.graphics.newFont("Early GameBoy.ttf", 16)
 	}
 
-	board.location.x = (screenWidth / 2) - (board.location.w / 2)
-	board.location.y = (screenHeight / 2) - (board.location.h / 2)
+	board.dimensions = {}
+
+	board.dimensions.w = boardWidth
+	board.dimensions.h = boardHeight
+
+	board.dimensions.x = (screenWidth / 2) - (board.dimensions.w / 2)
+	board.dimensions.y = (screenHeight / 2) - (board.dimensions.h / 2)
+
+	board.dimensions.hLineLength = round(board.dimensions.w / (hPoints - 1))
+	board.dimensions.vLineLength = round(board.dimensions.h / (vPoints - 1))
+
+	board.dimensions.pointSize = 5
+	board.dimensions.pointW = boardWidth - (board.dimensions.pointSize * 2)
+	board.dimensions.pointH = boardHeight - (board.dimensions.pointSize * 2)
+
+	board.dimensions.textWidth = board.graphics.font:getWidth("X")
+	board.dimensions.textHeight = board.graphics.font:getHeight("X")
 
 	board.points = {}
 
@@ -42,8 +73,8 @@ function initBoard(board, hPoints, vPoints)
 
 		for pointY = 0, vPoints - 1 do
 
-			local cartesianX = board.location.x + ((board.location.w / (hPoints - 1)) * pointX)
-			local cartesianY = board.location.y + ((board.location.h / (vPoints - 1)) * pointY)
+			local cartesianX = round(board.dimensions.pointSize + (board.dimensions.pointW / (hPoints - 1)) * pointX)
+			local cartesianY = round(board.dimensions.pointSize + (board.dimensions.pointH / (vPoints - 1)) * pointY)
 
 			board.points[pointCount] = 
 			{
@@ -58,6 +89,7 @@ function initBoard(board, hPoints, vPoints)
 				n = false, e = false, s = false, w = false,
 				nh = false, eh = false, sh = false, wh = false,
 				fillSquare = false,
+				player = nil
 			}
 
 			pointCount = pointCount + 1
@@ -66,23 +98,57 @@ function initBoard(board, hPoints, vPoints)
 
 	end
 
-	board.graphics = 
+	drawBoard(masterBoard, masterGameData)
+
+end
+
+function initUI(UI, uiWidth, uiHeight)
+
+	UI.graphics = 
 	{
-		pointSize = 5,
-		pointSegments = 4,
-		pointColour = { 255, 255, 255 },
-		lineUndrawnColour = { 100, 100, 100 },
-		lineDrawnColour = { 255, 255, 255 },
-		lineHighlightColour = { 0, 255, 0 },
-		squareColour = { 105, 214, 250 },
-		playerColour = { 255, 255, 255 }
+		font = love.graphics.newFont("Early GameBoy.ttf", 24),
+		fontColour = { 255, 255, 255 },
+		fontHighlightColour = { 0, 255, 255 }
 	}
 
-	board.graphics.hLineLength = board.location.w / (hPoints - 1)
-	board.graphics.vLineLength = board.location.h / (vPoints - 1)
-	board.graphics.playerSize = ((board.graphics.hLineLength + board.graphics.vLineLength) / 2) / 6
+	UI.dimensions = {}
 
-	drawBoard(masterBoard)
+	UI.dimensions.w = uiWidth
+	UI.dimensions.h = uiHeight
+
+	UI.dimensions.textWidth = UI.graphics.font:getWidth("X")
+	UI.dimensions.textHeight = UI.graphics.font:getHeight("X")
+	UI.dimensions.spacing = 20
+
+	UI.dimensions.playerOneUIx = (masterBoard.dimensions.x / 2) - (UI.dimensions.textWidth / 2)
+	UI.dimensions.playerTwoUIx = (masterBoard.dimensions.x + masterBoard.dimensions.w) + (masterBoard.dimensions.x / 2) - (UI.dimensions.textWidth / 2)
+
+	UI.dimensions.sigilY = (screenHeight / 2) - (UI.dimensions.textHeight + UI.dimensions.spacing)
+	UI.dimensions.scoreY = (screenHeight / 2) + UI.dimensions.spacing
+
+	drawUI(masterUI, masterGameData)
+
+end
+
+function initGameData(gameData)
+
+	gameData[1] = 
+	{
+		score = 0,
+		completedSquare = false,
+		lineDrawn = false,
+		sigil = "X"
+	}
+
+	gameData[2] = 
+	{
+		score = 0,
+		completedSquare = false,
+		lineDrawn = false,
+		sigil = "0"
+	}
+
+	gameData.currentPlayer = gameData[1]
 
 end
 
@@ -90,11 +156,13 @@ function love.draw()
 
 	love.graphics.setColor(255, 255, 255)
 	love.graphics.setBlendMode("alpha", "premultiplied")
-	love.graphics.draw(boardCanvas)
+
+	love.graphics.draw(uiCanvas, 0, 0)
+	love.graphics.draw(boardCanvas, masterBoard.dimensions.x, masterBoard.dimensions.y)
 
 end
 
-function drawBoard(board)
+function drawBoard(board, gameData)
 
 	love.graphics.setCanvas(boardCanvas)
 	love.graphics.clear()
@@ -113,7 +181,7 @@ function drawBoard(board)
 				love.graphics.setColor(board.graphics.lineUndrawnColour)
 			end
 
-			love.graphics.line(point.cartesianX, point.cartesianY, point.cartesianX + board.graphics.hLineLength, point.cartesianY)
+			love.graphics.line(point.cartesianX, point.cartesianY, point.cartesianX + board.dimensions.hLineLength, point.cartesianY)
 
 		end
 
@@ -128,25 +196,32 @@ function drawBoard(board)
 				love.graphics.setColor(board.graphics.lineUndrawnColour)
 			end
 
-			love.graphics.line(point.cartesianX, point.cartesianY, point.cartesianX, point.cartesianY + board.graphics.vLineLength)
+			love.graphics.line(point.cartesianX, point.cartesianY, point.cartesianX, point.cartesianY + board.dimensions.vLineLength)
 
 		end
 
 		-- draw square
 		if (point.fillSquare) then 
 
-			love.graphics.setColor(board.graphics.playerColour)
+			love.graphics.setFont(board.graphics.font)
 
-			local squareCenterX = point.cartesianX + (board.graphics.hLineLength / 2)
-			local squareCenterY = point.cartesianY + (board.graphics.vLineLength / 2)
+			local squareCenterX = point.cartesianX + (board.dimensions.hLineLength / 2)
+			local squareCenterY = point.cartesianY + (board.dimensions.vLineLength / 2)
 
-			love.graphics.circle("line", squareCenterX, squareCenterY, board.graphics.playerSize, 20)
+			local textX = round(squareCenterX - (masterBoard.dimensions.textWidth / 2))
+			local textY = round(squareCenterY - (masterBoard.dimensions.textHeight / 2))
+
+			if (point.player == gameData[1]) then
+				love.graphics.print(gameData[1].sigil, textX, textY)
+			elseif (point.player == gameData[2]) then
+				love.graphics.print(gameData[2].sigil, textX, textY)
+			end
 
 		end
 
 		-- draw point
 		love.graphics.setColor(board.graphics.pointColour)
-		love.graphics.circle("fill", point.cartesianX, point.cartesianY, board.graphics.pointSize, board.graphics.pointSegments)
+		love.graphics.circle("fill", point.cartesianX, point.cartesianY, board.dimensions.pointSize, board.graphics.pointSegments)
 
 	end
 
@@ -154,18 +229,56 @@ function drawBoard(board)
 
 end
 
+function drawUI(ui, gameData)
+
+	love.graphics.setCanvas(uiCanvas)
+	love.graphics.clear()
+	love.graphics.setBlendMode("alpha")
+
+	love.graphics.setFont(ui.graphics.font)
+
+	love.graphics.setColor(ui.graphics.fontColour)
+	if (gameData.currentPlayer == gameData[1]) then love.graphics.setColor(ui.graphics.fontHighlightColour) end
+
+	love.graphics.print(gameData[1].sigil, ui.dimensions.playerOneUIx, ui.dimensions.sigilY, 0)
+	love.graphics.print(tostring(gameData[1].score), ui.dimensions.playerOneUIx, ui.dimensions.scoreY, 0)
+
+	love.graphics.setColor(ui.graphics.fontColour)
+	if (gameData.currentPlayer == gameData[2]) then love.graphics.setColor(ui.graphics.fontHighlightColour) end
+
+	love.graphics.print(gameData[2].sigil, ui.dimensions.playerTwoUIx, ui.dimensions.sigilY, 0)
+	love.graphics.print(tostring(gameData[2].score), ui.dimensions.playerTwoUIx, ui.dimensions.scoreY, 0)
+
+	love.graphics.setCanvas()
+
+end
+
 function love.mousemoved(x, y)
 
-	highlightLine(masterBoard, x, y)
-	drawBoard(masterBoard)
+	local relativeX = x - masterBoard.dimensions.x
+	local relativeY = y - masterBoard.dimensions.y
+
+	highlightLine(masterBoard, relativeX, relativeY)
+	drawBoard(masterBoard, masterGameData)
 
 end
 
 function love.mousepressed(x, y)
 
-	updateLines(masterBoard, x, y)
-	updateSquares()
-	drawBoard(masterBoard)
+	local relativeX = x - masterBoard.dimensions.x
+	local relativeY = y - masterBoard.dimensions.y
+
+	updateLines(masterBoard, relativeX, relativeY)
+	updateSquares(masterBoard, masterGameData)
+
+	drawBoard(masterBoard, masterGameData)
+	drawUI(masterUI, masterGameData)
+
+	if (masterGameData.currentPlayer.lineDrawn) then
+
+		completeMove(masterGameData, masterUI)
+
+	end
 
 end
 
@@ -213,6 +326,7 @@ function updateLines(board, x, y)
 
 				point.e = eastLineCollision(board, point, x, y)
 				lineDrawn = point.e
+				masterGameData.currentPlayer.lineDrawn = lineDrawn
 
 			end
 
@@ -224,6 +338,7 @@ function updateLines(board, x, y)
 
 				point.s = southLineCollision(board, point, x, y)
 				lineDrawn = point.s
+				masterGameData.currentPlayer.lineDrawn = lineDrawn
 
 			end
 
@@ -237,7 +352,7 @@ function eastLineCollision(board, point, x, y)
 
 	if (not closeToAdjacentPoints(board, point, "east", x, y)) then
 
-		if (x > point.cartesianX) and (x < point.cartesianX + board.graphics.hLineLength) then
+		if (x > point.cartesianX) and (x < point.cartesianX + board.dimensions.hLineLength) then
 
 			local yOffset = y - point.cartesianY
 
@@ -259,7 +374,7 @@ function southLineCollision(board, point, x, y)
 
 	if (not closeToAdjacentPoints(board, point, "south", x, y)) then
 
-		if (y > point.cartesianY) and (y < point.cartesianY + board.graphics.vLineLength) then
+		if (y > point.cartesianY) and (y < point.cartesianY + board.dimensions.vLineLength) then
 
 			local xOffset = x - point.cartesianX
 
@@ -347,22 +462,30 @@ function closeToPoint(point, x, y)
 
 end
 
-function updateSquares()
+function updateSquares(board, gameData)
 
-	for pointIndex, point in ipairs(masterBoard.points) do
+	gameData.currentPlayer.completedSquare = false
+
+	for pointIndex, point in ipairs(board.points) do
 
 		-- if point.e and point.s, get index of east and south points
 		if (point.e and point.s) then
 
-			local relativeEastPoint = masterBoard.points[pointIndex + masterBoard.vPoints]
-			local relativeSouthPoint = masterBoard.points[pointIndex + 1]
+			local relativeEastPoint = board.points[pointIndex + board.vPoints]
+			local relativeSouthPoint = board.points[pointIndex + 1]
 
 			if (relativeEastPoint and relativeSouthPoint) then
 
 				-- if east.s and south.e, square completed
 				if (relativeEastPoint.s and relativeSouthPoint.e) then
 
-					point.fillSquare = true
+					if (not point.fillSquare) then
+
+						point.fillSquare = true
+						point.player = gameData.currentPlayer
+						updateScore(gameData)
+
+					end
 
 				end
 
@@ -374,12 +497,42 @@ function updateSquares()
 
 end
 
-function love.keypressed(key)
+function updateScore(gameData)
 
-	if (key == "space") then
+	gameData.currentPlayer.score = gameData.currentPlayer.score + 1
+	gameData.currentPlayer.completedSquare = true
 
-		if currentPlayer == 1 then currentPlayer = 2 elseif currentPlayer == 2 then currentPlayer = 1 end
+end
+
+function completeMove(gameData, ui)
+
+	if (not gameData.currentPlayer.completedSquare) then
+
+		if (gameData.currentPlayer.lineDrawn) then
+
+			switchPlayer(gameData, ui)
+
+		end
 
 	end
+
+end
+
+function switchPlayer(gameData, ui)
+
+	if (gameData.currentPlayer == gameData[1]) then
+
+		gameData.currentPlayer = gameData[2]
+
+	elseif (gameData.currentPlayer == gameData[2]) then
+
+		gameData.currentPlayer = gameData[1]
+
+	end
+
+	gameData.currentPlayer.lineDrawn = false
+	gameData.currentPlayer.completedSquare = false
+
+	drawUI(ui, gameData)
 
 end
