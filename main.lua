@@ -6,6 +6,22 @@ function round(x)
 
 end
 
+function tableContainsValue(table, value)
+
+	for _, tableValue in pairs(table) do
+
+		if (tableValue == value) then
+
+			return true
+
+		end
+
+	end
+
+	return false
+
+end
+
 -- global
 local screenWidth, screenHeight = 600, 450 -- 4:3
 local boardWidth, boardHeight = round(screenWidth / 1.65), round(screenWidth / 1.65)
@@ -29,11 +45,15 @@ function love.load()
 	initBoard(masterBoard, 10, 10, boardWidth, boardHeight)
 	initUI(masterUI, screenWidth, screenHeight)
 
+	randomisedStart(masterBoard)
+
 end
 
 function initBoard(board, hPoints, vPoints, boardWidth, boardHeight)
 
 	board.hPoints, board.vPoints = hPoints, vPoints
+
+	board.lineQuantity = ((hPoints - 1) * vPoints) + (hPoints * (vPoints - 1))
 
 	board.graphics = 
 	{
@@ -149,6 +169,126 @@ function initGameData(gameData)
 	}
 
 	gameData.currentPlayer = gameData[1]
+
+end
+
+function randomisedStart(board) 
+
+	local randomLines = {}
+
+	math.randomseed(os.time())
+
+	for i = 1, 50 do
+
+		local randomLine = math.random(board.lineQuantity)
+
+		while (tableContainsValue(randomLines, randomLine)) do
+
+			randomLine = math.random(board.lineQuantity)
+
+		end
+
+		table.insert(randomLines, randomLine)
+
+	end
+
+	table.sort(randomLines)
+
+	-- for index, randomLine in ipairs(randomLines) do
+
+	-- 	print("********************************************")
+
+	-- 	print("randomLine " .. index .. ": " .. randomLine)
+
+	-- 	local randomPointIndex, randomDirection = lineNumberToPointReference(board, randomLine)
+
+	-- 	print("randomPointIndex: " .. randomPointIndex .. " / randomDirection: " .. randomDirection)
+
+	-- end
+
+	for _, randomLine in ipairs(randomLines) do
+
+		local randomPointIndex, randomDirection = lineNumberToPointReference(board, randomLine)
+
+		local point = board.points[randomPointIndex]
+
+		if (randomDirection == "e") then
+
+			point.e = true
+
+		elseif (randomDirection == "s") then
+
+			point.s = true
+
+		end
+
+	end
+
+	drawBoard(board, masterGameData)
+
+end
+
+function lineNumberToPointReference(board, lineNumber)
+
+	local pointIndex = 0
+	local lineCount = 0
+
+	for x = 1, board.hPoints do
+
+		for y = 1, board.vPoints do
+
+			pointIndex = pointIndex + 1
+
+			if (x == board.hPoints and y == board.vPoints) then
+
+				-- no lines
+
+			elseif (x == board.hPoints) then
+
+				-- east line only
+				lineCount = lineCount + 1
+
+				if (lineCount == lineNumber) then
+
+					return pointIndex, "s"
+
+				end
+
+			elseif (y == board.vPoints) then
+
+				-- south line only
+				lineCount = lineCount + 1
+
+				if (lineCount == lineNumber) then
+
+					return pointIndex, "e"
+
+				end
+
+			else
+
+				-- south and east lines
+				lineCount = lineCount + 1
+
+				if (lineCount == lineNumber) then
+
+					return pointIndex, "e"
+
+				end
+
+				lineCount = lineCount + 1
+
+				if (lineCount == lineNumber) then
+
+					return pointIndex, "s"
+
+				end
+
+			end
+			
+		end
+
+	end
 
 end
 
