@@ -178,7 +178,7 @@ function randomisedStart(board)
 
 	math.randomseed(os.time())
 
-	for i = 1, 50 do
+	for i = 1, 25 do
 
 		local randomLine = math.random(board.lineQuantity)
 
