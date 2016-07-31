@@ -116,12 +116,19 @@ function initUI(UI, uiWidth, uiHeight)
 	UI.dimensions.w = uiWidth
 	UI.dimensions.h = uiHeight
 
-	UI.dimensions.textWidth = UI.graphics.font:getWidth("X")
 	UI.dimensions.textHeight = UI.graphics.font:getHeight("X")
+	UI.dimensions.sigilWidth = UI.graphics.font:getWidth("X")
+	UI.dimensions.scoreWidthSingle = UI.graphics.font:getWidth("0")
+	UI.dimensions.scoreWidthDouble = UI.graphics.font:getWidth("00")
 	UI.dimensions.spacing = 20
 
-	UI.dimensions.playerOneUIx = (masterBoard.dimensions.x / 2) - (UI.dimensions.textWidth / 2)
-	UI.dimensions.playerTwoUIx = (masterBoard.dimensions.x + masterBoard.dimensions.w) + (masterBoard.dimensions.x / 2) - (UI.dimensions.textWidth / 2)
+	UI.dimensions.playerOneSigilx = (masterBoard.dimensions.x / 2) - (UI.dimensions.sigilWidth / 2)
+	UI.dimensions.playerOneScoreSinglex = (masterBoard.dimensions.x / 2) - (UI.dimensions.scoreWidthSingle / 2)
+	UI.dimensions.playerOneScoreDoublex = (masterBoard.dimensions.x / 2) - (UI.dimensions.scoreWidthDouble / 2)
+
+	UI.dimensions.playerTwoSigilx = (masterBoard.dimensions.x + masterBoard.dimensions.w) + (masterBoard.dimensions.x / 2) - (UI.dimensions.sigilWidth / 2)
+	UI.dimensions.playerTwoScoreSinglex = (masterBoard.dimensions.x + masterBoard.dimensions.w) + (masterBoard.dimensions.x / 2) - (UI.dimensions.scoreWidthSingle / 2)
+	UI.dimensions.playerTwoScoreDoublex = (masterBoard.dimensions.x + masterBoard.dimensions.w) + (masterBoard.dimensions.x / 2) - (UI.dimensions.scoreWidthDouble / 2)
 
 	UI.dimensions.sigilY = (screenHeight / 2) - (UI.dimensions.textHeight + UI.dimensions.spacing)
 	UI.dimensions.scoreY = (screenHeight / 2) + UI.dimensions.spacing
@@ -237,17 +244,36 @@ function drawUI(ui, gameData)
 
 	love.graphics.setFont(ui.graphics.font)
 
+	-- set player one colour
 	love.graphics.setColor(ui.graphics.fontColour)
 	if (gameData.currentPlayer == gameData[1]) then love.graphics.setColor(ui.graphics.fontHighlightColour) end
 
-	love.graphics.print(gameData[1].sigil, ui.dimensions.playerOneUIx, ui.dimensions.sigilY, 0)
-	love.graphics.print(tostring(gameData[1].score), ui.dimensions.playerOneUIx, ui.dimensions.scoreY, 0)
+	-- print player one sigil
+	love.graphics.print(gameData[1].sigil, ui.dimensions.playerOneSigilx, ui.dimensions.sigilY, 0)
 
+	-- print player one score
+	local playerOneScore = gameData[1].score
+
+	if (playerOneScore < 10) then
+		love.graphics.print(tostring(gameData[1].score), ui.dimensions.playerOneScoreSinglex, ui.dimensions.scoreY, 0)
+	else
+		love.graphics.print(tostring(gameData[1].score), ui.dimensions.playerOneScoreDoublex, ui.dimensions.scoreY, 0)
+	end
+
+	-- set player two colour
 	love.graphics.setColor(ui.graphics.fontColour)
 	if (gameData.currentPlayer == gameData[2]) then love.graphics.setColor(ui.graphics.fontHighlightColour) end
 
-	love.graphics.print(gameData[2].sigil, ui.dimensions.playerTwoUIx, ui.dimensions.sigilY, 0)
-	love.graphics.print(tostring(gameData[2].score), ui.dimensions.playerTwoUIx, ui.dimensions.scoreY, 0)
+	-- print player two sigil
+	love.graphics.print(gameData[2].sigil, ui.dimensions.playerTwoSigilx, ui.dimensions.sigilY, 0)
+
+	-- print player two score
+	local playerTwoScore = gameData[2].score
+	if (playerTwoScore < 10) then
+		love.graphics.print(tostring(gameData[2].score), ui.dimensions.playerTwoScoreSinglex, ui.dimensions.scoreY, 0)
+	else
+		love.graphics.print(tostring(gameData[2].score), ui.dimensions.playerTwoScoreDoublex, ui.dimensions.scoreY, 0)
+	end
 
 	love.graphics.setCanvas()
 
