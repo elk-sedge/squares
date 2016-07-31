@@ -86,8 +86,8 @@ function initBoard(board, hPoints, vPoints, boardWidth, boardHeight)
 				cartesianX = cartesianX,
 				cartesianY = cartesianY,
 
-				n = false, e = false, s = false, w = false,
-				nh = false, eh = false, sh = false, wh = false,
+				e = false, s = false, 
+				eh = false, sh = false, 
 				fillSquare = false,
 				player = nil
 			}
