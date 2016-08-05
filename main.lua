@@ -1,5 +1,3 @@
-io.stdout:setvbuf("no")
-
 -- helpers
 function round(x)
 
@@ -31,7 +29,7 @@ function love.load()
 	initBoard(masterBoard, 10, 10, boardWidth, boardHeight)
 	initUI(masterUI, screenWidth, screenHeight)
 
-	randomisedStart(masterBoard, 70)
+	randomisedStart(masterBoard, 75)
 
 end
 
