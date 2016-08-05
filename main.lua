@@ -29,7 +29,7 @@ function love.load()
 	initBoard(masterBoard, 10, 10, boardWidth, boardHeight)
 	initUI(masterUI, screenWidth, screenHeight)
 
-	randomisedStart(masterBoard)
+	randomisedStart(masterBoard, 70)
 
 end
 
@@ -154,14 +154,14 @@ function initGameData(gameData)
 
 end
 
-function randomisedStart(board) 
+function randomisedStart(board, randomLineQuantity) 
 
 	local randomLines = {}
 	local directions = { "e", "s" }
 
 	math.randomseed(os.time())
 
-	for i = 1, 50 do
+	for i = 1, randomLineQuantity do
 
 		local randomLine
 
@@ -497,7 +497,7 @@ function love.mousemoved(x, y)
 	local relativeY = y - masterBoard.dimensions.y
 
 	highlightLine(masterBoard, relativeX, relativeY)
-	-- drawBoard(masterBoard, masterGameData)
+	drawBoard(masterBoard, masterGameData)
 
 end
 
@@ -509,7 +509,7 @@ function love.mousepressed(x, y)
 	updateLines(masterBoard, relativeX, relativeY)
 	updateSquares(masterBoard, masterGameData)
 
-	-- drawBoard(masterBoard, masterGameData)
+	drawBoard(masterBoard, masterGameData)
 	drawUI(masterUI, masterGameData)
 
 	if (masterGameData.currentPlayer.lineDrawn) then
