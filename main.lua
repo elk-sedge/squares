@@ -1,3 +1,5 @@
+io.stdout:setvbuf("no")
+
 -- helpers
 function round(x)
 
@@ -224,7 +226,7 @@ function lineMakesSquarePossible(board, lines, potLine)
 
 		if (not pointIsOnTopRow(potLine.point, board.vPoints)) then
 
-			local northPointEast, northPointSouth, northEastPointSouth = getNorthEastSquareLines(potLine.point, board.vPoints)
+			local northPointEast, northPointSouth, northEastPointSouth = getEastNorthSquareLines(potLine.point, board.vPoints)
 
 			local northPointEastDrawn = lineListContainsLine(lines, northPointEast) and 1 or 0
 			local northPointSouthDrawn = lineListContainsLine(lines, northPointSouth) and 1 or 0
@@ -242,7 +244,7 @@ function lineMakesSquarePossible(board, lines, potLine)
 
 		if (not pointIsOnBottomRow(potLine.point, board.vPoints)) then
 
-			local localPointSouth, eastPointSouth, southPointEast = getSouthSquareLines(potLine.point, board.vPoints)
+			local localPointSouth, eastPointSouth, southPointEast = getEastSouthSquareLines(potLine.point, board.vPoints)
 
 			local localPointSouthDrawn = lineListContainsLine(lines, localPointSouth) and 1 or 0
 			local eastPointSouthDrawn = lineListContainsLine(lines, eastPointSouth) and 1 or 0
@@ -262,7 +264,7 @@ function lineMakesSquarePossible(board, lines, potLine)
 
 		if (not pointIsOnLeftCol(potLine.point, board.vPoints)) then
 
-			local westPointEast, westPointSouth, southWestPointEast = getWestSquareLines(potLine.point, board.vPoints)
+			local westPointEast, westPointSouth, southWestPointEast = getSouthWestSquareLines(potLine.point, board.vPoints)
 
 			local westPointEastDrawn = lineListContainsLine(lines, westPointEast) and 1 or 0
 			local westPointSouthDrawn = lineListContainsLine(lines, westPointSouth) and 1 or 0
@@ -280,7 +282,7 @@ function lineMakesSquarePossible(board, lines, potLine)
 
 		if not (pointIsOnRightCol(potLine.point, #board.points, board.vPoints)) then
 
-			local localPointEast, eastPointSouth, southPointEast = getEastSquareLines(potLine.point, board.vPoints)
+			local localPointEast, eastPointSouth, southPointEast = getSouthEastSquareLines(potLine.point, board.vPoints)
 
 			local localPointEastDrawn = lineListContainsLine(lines, localPointEast) and 1 or 0
 			local eastPointSouthDrawn = lineListContainsLine(lines, eastPointSouth) and 1 or 0
@@ -326,45 +328,69 @@ function pointIsOnRightCol(point, totalPoints, vPoints)
 
 end
 
-function getNorthEastSquareLines(point, vPoints)
+function getEastNorthSquareLines(point, vPoints)
 
 	-- get northPointEast/northPointSouth/northEastPointSouth
 	local northPointEast = { point = point - 1, direction = "e" }
 	local northPointSouth = { point = point - 1, direction = "s" }
 	local northEastPointSouth = { point = point + (vPoints - 1), direction = "s" }
 
+	-- print("****************** GET_EASTNORTHSQUARE")
+	-- print("point: " .. point)
+	-- print("northPointEast: " .. northPointEast.point .. " " .. northPointEast.direction)
+	-- print("northPointSouth: " .. northPointSouth.point .. " " .. northPointSouth.direction)
+	-- print("northEastPointSouth: " .. northEastPointSouth.point .. " " .. northEastPointSouth.direction)
+
 	return northPointEast, northPointSouth, northEastPointSouth
 
 end
 
-function getSouthSquareLines(point, vPoints)
+function getEastSouthSquareLines(point, vPoints)
 
 	-- get localPointSouth/eastPointSouth/southPointEast
 	local localPointSouth = { point = point, direction = "s" }
 	local eastPointSouth = { point = point + vPoints, direction = "s" }
 	local southPointEast = { point = point + 1, direction = "e" }
 
+	-- print("****************** GET_EASTSOUTHSQUARE")
+	-- print("point: " .. point)
+	-- print("localPointSouth: " .. localPointSouth.point .. " " .. localPointSouth.direction)
+	-- print("eastPointSouth: " .. eastPointSouth.point .. " " .. eastPointSouth.direction)
+	-- print("southPointEast: " .. southPointEast.point .. " " .. southPointEast.direction)
+
 	return localPointSouth, eastPointSouth, southPointEast
 
 end
 
-function getWestSquareLines(point, vPoints)
+function getSouthWestSquareLines(point, vPoints)
 
 	-- get eastPointEast/eastPointSouth/southEastPointEast
 	local westPointEast = { point = point - vPoints, direction = "e" }
 	local westPointSouth = { point = point - vPoints, direction = "s" }
 	local southWestPointEast = { point = point - (vPoints - 1), direction = "e" }
 
+	-- print("****************** GET_SOUTHWESTSQUARE")
+	-- print("point: " .. point)
+	-- print("westPointEast: " .. westPointEast.point .. " " .. westPointEast.direction)
+	-- print("westPointSouth: " .. westPointSouth.point .. " " .. westPointSouth.direction)
+	-- print("southWestPointEast: " .. southWestPointEast.point .. " " .. southWestPointEast.direction)
+
 	return westPointEast, westPointSouth, southWestPointEast
 
 end
 
-function getEastSquareLines(point, vPoints)
+function getSouthEastSquareLines(point, vPoints)
 
 	-- get localPointEast, eastPointSouth, southPointEast
 	local localPointEast = { point = point, direction = "e" }
 	local eastPointSouth = { point = point + 10, direction = "s" }
 	local southPointEast = { point = point + 1, direction = "e" }
+
+	-- print("****************** GET_SOUTHEASTSQUARE")
+	-- print("point: " .. point)
+	-- print("localPointEast: " .. localPointEast.point .. " " .. localPointEast.direction)
+	-- print("eastPointSouth: " .. eastPointSouth.point .. " " .. eastPointSouth.direction)
+	-- print("southPointEast: " .. southPointEast.point .. " " .. southPointEast.direction)
 
 	return localPointEast, eastPointSouth, southPointEast
 
