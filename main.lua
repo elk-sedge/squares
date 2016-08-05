@@ -333,12 +333,6 @@ function getEastNorthSquareLines(point, vPoints)
 	local northPointSouth = { point = point - 1, direction = "s" }
 	local northEastPointSouth = { point = point + (vPoints - 1), direction = "s" }
 
-	-- print("****************** GET_EASTNORTHSQUARE")
-	-- print("point: " .. point)
-	-- print("northPointEast: " .. northPointEast.point .. " " .. northPointEast.direction)
-	-- print("northPointSouth: " .. northPointSouth.point .. " " .. northPointSouth.direction)
-	-- print("northEastPointSouth: " .. northEastPointSouth.point .. " " .. northEastPointSouth.direction)
-
 	return northPointEast, northPointSouth, northEastPointSouth
 
 end
@@ -349,12 +343,6 @@ function getEastSouthSquareLines(point, vPoints)
 	local localPointSouth = { point = point, direction = "s" }
 	local eastPointSouth = { point = point + vPoints, direction = "s" }
 	local southPointEast = { point = point + 1, direction = "e" }
-
-	-- print("****************** GET_EASTSOUTHSQUARE")
-	-- print("point: " .. point)
-	-- print("localPointSouth: " .. localPointSouth.point .. " " .. localPointSouth.direction)
-	-- print("eastPointSouth: " .. eastPointSouth.point .. " " .. eastPointSouth.direction)
-	-- print("southPointEast: " .. southPointEast.point .. " " .. southPointEast.direction)
 
 	return localPointSouth, eastPointSouth, southPointEast
 
@@ -367,12 +355,6 @@ function getSouthWestSquareLines(point, vPoints)
 	local westPointSouth = { point = point - vPoints, direction = "s" }
 	local southWestPointEast = { point = point - (vPoints - 1), direction = "e" }
 
-	-- print("****************** GET_SOUTHWESTSQUARE")
-	-- print("point: " .. point)
-	-- print("westPointEast: " .. westPointEast.point .. " " .. westPointEast.direction)
-	-- print("westPointSouth: " .. westPointSouth.point .. " " .. westPointSouth.direction)
-	-- print("southWestPointEast: " .. southWestPointEast.point .. " " .. southWestPointEast.direction)
-
 	return westPointEast, westPointSouth, southWestPointEast
 
 end
@@ -383,12 +365,6 @@ function getSouthEastSquareLines(point, vPoints)
 	local localPointEast = { point = point, direction = "e" }
 	local eastPointSouth = { point = point + 10, direction = "s" }
 	local southPointEast = { point = point + 1, direction = "e" }
-
-	-- print("****************** GET_SOUTHEASTSQUARE")
-	-- print("point: " .. point)
-	-- print("localPointEast: " .. localPointEast.point .. " " .. localPointEast.direction)
-	-- print("eastPointSouth: " .. eastPointSouth.point .. " " .. eastPointSouth.direction)
-	-- print("southPointEast: " .. southPointEast.point .. " " .. southPointEast.direction)
 
 	return localPointEast, eastPointSouth, southPointEast
 
