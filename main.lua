@@ -419,10 +419,13 @@ function drawBoard(board, gameData)
 		if (point.x < board.hPoints - 1) then
 
 			if (point.e) then
+				love.graphics.setLineWidth(2)
 				love.graphics.setColor(board.graphics.lineDrawnColour)
 			elseif (point.eh) then
+				love.graphics.setLineWidth(2)
 				love.graphics.setColor(board.graphics.lineHighlightColour)
 			else
+				love.graphics.setLineWidth(1)
 				love.graphics.setColor(board.graphics.lineUndrawnColour)
 			end
 
@@ -434,10 +437,13 @@ function drawBoard(board, gameData)
 		if (point.y < board.vPoints - 1) then
 
 			if (point.s) then
+				love.graphics.setLineWidth(2)
 				love.graphics.setColor(board.graphics.lineDrawnColour)
 			elseif (point.sh) then
+				love.graphics.setLineWidth(2)
 				love.graphics.setColor(board.graphics.lineHighlightColour)		
 			else
+				love.graphics.setLineWidth(1)
 				love.graphics.setColor(board.graphics.lineUndrawnColour)
 			end
 
