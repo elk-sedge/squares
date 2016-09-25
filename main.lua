@@ -29,6 +29,8 @@ function love.load()
 	initBoard(masterBoard, 10, 10, boardWidth, boardHeight)
 	initUI(masterUI, screenWidth, screenHeight)
 
+	randomisedStart(masterBoard, 75)
+
 end
 
 function initBoard(board, hPoints, vPoints, boardWidth, boardHeight)
@@ -156,6 +158,242 @@ function initGameData(gameData)
 	}
 
 	gameData.currentPlayer = gameData[1]
+
+end
+
+function randomisedStart(board, randomLineQuantity) 
+
+	local randomLines = {}
+	local directions = { "e", "s" }
+
+	math.randomseed(os.time())
+
+	for i = 1, randomLineQuantity do
+
+		local randomLine
+
+		repeat
+
+			local randomPoint = math.random(#board.points)
+			local randomDirection = directions[math.random(#directions)]
+
+			randomLine = { point = randomPoint, direction = randomDirection }
+
+		until lineIsLegitimate(board, randomLine) and not lineListContainsLine(randomLines, randomLine) and not lineMakesSquarePossible(board, randomLines, randomLine)
+
+		table.insert(randomLines, randomLine)
+
+	end
+
+	for _, randomLine in pairs(randomLines) do
+
+		local point = board.points[randomLine.point]
+
+		if (randomLine.direction == "e") then
+
+			point.e = true
+
+		end
+
+		if (randomLine.direction == "s") then
+
+			point.s = true
+
+		end
+
+	end
+
+	drawBoard(board, masterGameData)
+
+end
+
+function lineIsLegitimate(board, line)
+
+	if (pointIsOnRightCol(line.point, #board.points, board.vPoints) and line.direction == "e") then
+
+		return false
+
+	end
+
+	if (pointIsOnBottomRow(line.point, board.vPoints) and line.direction == "s") then
+
+		return false
+
+	end
+
+	return true
+
+end
+
+function lineMakesSquarePossible(board, lines, potLine)
+
+	if (potLine.direction == "e") then
+
+		if (not pointIsOnTopRow(potLine.point, board.vPoints)) then
+
+			local northPointEast, northPointSouth, northEastPointSouth = getEastNorthSquareLines(potLine.point, board.vPoints)
+
+			local northPointEastDrawn = lineListContainsLine(lines, northPointEast) and 1 or 0
+			local northPointSouthDrawn = lineListContainsLine(lines, northPointSouth) and 1 or 0
+			local northEastPointSouthDrawn = lineListContainsLine(lines, northEastPointSouth) and 1 or 0
+
+			local totalLines = northPointEastDrawn + northPointSouthDrawn + northEastPointSouthDrawn
+
+			if (totalLines > 1) then
+
+				return true
+
+			end
+
+		end
+
+		if (not pointIsOnBottomRow(potLine.point, board.vPoints)) then
+
+			local localPointSouth, eastPointSouth, southPointEast = getEastSouthSquareLines(potLine.point, board.vPoints)
+
+			local localPointSouthDrawn = lineListContainsLine(lines, localPointSouth) and 1 or 0
+			local eastPointSouthDrawn = lineListContainsLine(lines, eastPointSouth) and 1 or 0
+			local southPointEastDrawn = lineListContainsLine(lines, southPointEast) and 1 or 0
+
+			local totalLines = localPointSouthDrawn + eastPointSouthDrawn + southPointEastDrawn
+
+			if (totalLines > 1) then
+
+				return true
+
+			end
+
+		end
+
+	elseif (potLine.direction == "s") then
+
+		if (not pointIsOnLeftCol(potLine.point, board.vPoints)) then
+
+			local westPointEast, westPointSouth, southWestPointEast = getSouthWestSquareLines(potLine.point, board.vPoints)
+
+			local westPointEastDrawn = lineListContainsLine(lines, westPointEast) and 1 or 0
+			local westPointSouthDrawn = lineListContainsLine(lines, westPointSouth) and 1 or 0
+			local southWestPointEastDrawn = lineListContainsLine(lines, southWestPointEast) and 1 or 0
+
+			local totalLines = westPointEastDrawn + westPointSouthDrawn + southWestPointEastDrawn
+
+			if (totalLines > 1) then
+
+				return true
+
+			end
+
+		end
+
+		if not (pointIsOnRightCol(potLine.point, #board.points, board.vPoints)) then
+
+			local localPointEast, eastPointSouth, southPointEast = getSouthEastSquareLines(potLine.point, board.vPoints)
+
+			local localPointEastDrawn = lineListContainsLine(lines, localPointEast) and 1 or 0
+			local eastPointSouthDrawn = lineListContainsLine(lines, eastPointSouth) and 1 or 0
+			local southPointEastDrawn = lineListContainsLine(lines, southPointEast) and 1 or 0
+
+			local totalLines = localPointEastDrawn + eastPointSouthDrawn + southPointEastDrawn
+
+			if (totalLines > 1) then
+
+				return true
+
+			end
+
+		end
+
+	end
+
+	return false
+
+end
+
+function pointIsOnTopRow(point, vPoints)
+
+	return point == 1 or point % (vPoints + 1) == 0
+
+end
+
+function pointIsOnBottomRow(point, vPoints)
+
+	return point % vPoints == 0
+
+end
+
+function pointIsOnLeftCol(point, vPoints)
+
+	return point <= vPoints
+
+end
+
+function pointIsOnRightCol(point, totalPoints, vPoints)
+
+	return point > totalPoints - vPoints
+
+end
+
+function getEastNorthSquareLines(point, vPoints)
+
+	-- get northPointEast/northPointSouth/northEastPointSouth
+	local northPointEast = { point = point - 1, direction = "e" }
+	local northPointSouth = { point = point - 1, direction = "s" }
+	local northEastPointSouth = { point = point + (vPoints - 1), direction = "s" }
+
+	return northPointEast, northPointSouth, northEastPointSouth
+
+end
+
+function getEastSouthSquareLines(point, vPoints)
+
+	-- get localPointSouth/eastPointSouth/southPointEast
+	local localPointSouth = { point = point, direction = "s" }
+	local eastPointSouth = { point = point + vPoints, direction = "s" }
+	local southPointEast = { point = point + 1, direction = "e" }
+
+	return localPointSouth, eastPointSouth, southPointEast
+
+end
+
+function getSouthWestSquareLines(point, vPoints)
+
+	-- get eastPointEast/eastPointSouth/southEastPointEast
+	local westPointEast = { point = point - vPoints, direction = "e" }
+	local westPointSouth = { point = point - vPoints, direction = "s" }
+	local southWestPointEast = { point = point - (vPoints - 1), direction = "e" }
+
+	return westPointEast, westPointSouth, southWestPointEast
+
+end
+
+function getSouthEastSquareLines(point, vPoints)
+
+	-- get localPointEast, eastPointSouth, southPointEast
+	local localPointEast = { point = point, direction = "e" }
+	local eastPointSouth = { point = point + 10, direction = "s" }
+	local southPointEast = { point = point + 1, direction = "e" }
+
+	return localPointEast, eastPointSouth, southPointEast
+
+end
+
+function lineListContainsLine(lines, line)
+
+	for _, lineListLine in pairs(lines) do
+
+		if (line.point == lineListLine.point) then
+
+			if (line.direction == lineListLine.direction) then
+
+				return true
+
+			end
+
+		end
+
+	end
+
+	return false
 
 end
 
