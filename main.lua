@@ -1,4 +1,5 @@
--- helpers
+-- ************************************************ HELPERS
+
 function round(x)
 
 	local mult = 10^(0)
@@ -6,7 +7,8 @@ function round(x)
 
 end
 
--- global
+-- ************************************************ GLOBAL
+
 local screenWidth, screenHeight = 600, 450 -- 4:3
 local boardWidth, boardHeight = round(screenWidth / 1.65), round(screenWidth / 1.65)
 
@@ -17,7 +19,8 @@ local masterGameData = {}
 local boardCanvas
 local uiCanvas
 
--- main
+-- ************************************************ MAIN
+
 function love.load()
 
 	love.window.setMode(screenWidth, screenHeight)
@@ -141,7 +144,7 @@ end
 
 function initGameData(gameData)
 
-	gameData[1] = 
+	gameData["playerOne"] = 
 	{
 		score = 0,
 		completedSquare = false,
@@ -149,7 +152,7 @@ function initGameData(gameData)
 		sigil = "X"
 	}
 
-	gameData[2] = 
+	gameData["playerTwo"] = 
 	{
 		score = 0,
 		completedSquare = false,
@@ -157,7 +160,7 @@ function initGameData(gameData)
 		sigil = "0"
 	}
 
-	gameData.currentPlayer = gameData[1]
+	gameData.currentPlayer = gameData["playerOne"]
 
 end
 
@@ -462,10 +465,10 @@ function drawBoard(board, gameData)
 			local textX = round(squareCenterX - (masterBoard.dimensions.textWidth / 2))
 			local textY = round(squareCenterY - (masterBoard.dimensions.textHeight / 2))
 
-			if (point.player == gameData[1]) then
-				love.graphics.print(gameData[1].sigil, textX, textY)
-			elseif (point.player == gameData[2]) then
-				love.graphics.print(gameData[2].sigil, textX, textY)
+			if (point.player == gameData["playerOne"]) then
+				love.graphics.print(gameData["playerOne"].sigil, textX, textY)
+			elseif (point.player == gameData["playerTwo"]) then
+				love.graphics.print(gameData["playerTwo"].sigil, textX, textY)
 			end
 
 		end
@@ -490,33 +493,33 @@ function drawUI(ui, gameData)
 
 	-- set player one colour
 	love.graphics.setColor(ui.graphics.fontColour)
-	if (gameData.currentPlayer == gameData[1]) then love.graphics.setColor(ui.graphics.fontHighlightColour) end
+	if (gameData.currentPlayer == gameData["playerOne"]) then love.graphics.setColor(ui.graphics.fontHighlightColour) end
 
 	-- print player one sigil
-	love.graphics.print(gameData[1].sigil, ui.dimensions.playerOneSigilx, ui.dimensions.sigilY, 0)
+	love.graphics.print(gameData["playerOne"].sigil, ui.dimensions.playerOneSigilx, ui.dimensions.sigilY, 0)
 
 	-- print player one score
-	local playerOneScore = gameData[1].score
+	local playerOneScore = gameData["playerOne"].score
 
 	if (playerOneScore < 10) then
-		love.graphics.print(tostring(gameData[1].score), ui.dimensions.playerOneScoreSinglex, ui.dimensions.scoreY, 0)
+		love.graphics.print(tostring(gameData["playerOne"].score), ui.dimensions.playerOneScoreSinglex, ui.dimensions.scoreY, 0)
 	else
-		love.graphics.print(tostring(gameData[1].score), ui.dimensions.playerOneScoreDoublex, ui.dimensions.scoreY, 0)
+		love.graphics.print(tostring(gameData["playerOne"].score), ui.dimensions.playerOneScoreDoublex, ui.dimensions.scoreY, 0)
 	end
 
 	-- set player two colour
 	love.graphics.setColor(ui.graphics.fontColour)
-	if (gameData.currentPlayer == gameData[2]) then love.graphics.setColor(ui.graphics.fontHighlightColour) end
+	if (gameData.currentPlayer == gameData["playerTwo"]) then love.graphics.setColor(ui.graphics.fontHighlightColour) end
 
 	-- print player two sigil
-	love.graphics.print(gameData[2].sigil, ui.dimensions.playerTwoSigilx, ui.dimensions.sigilY, 0)
+	love.graphics.print(gameData["playerTwo"].sigil, ui.dimensions.playerTwoSigilx, ui.dimensions.sigilY, 0)
 
 	-- print player two score
-	local playerTwoScore = gameData[2].score
+	local playerTwoScore = gameData["playerTwo"].score
 	if (playerTwoScore < 10) then
-		love.graphics.print(tostring(gameData[2].score), ui.dimensions.playerTwoScoreSinglex, ui.dimensions.scoreY, 0)
+		love.graphics.print(tostring(gameData["playerTwo"].score), ui.dimensions.playerTwoScoreSinglex, ui.dimensions.scoreY, 0)
 	else
-		love.graphics.print(tostring(gameData[2].score), ui.dimensions.playerTwoScoreDoublex, ui.dimensions.scoreY, 0)
+		love.graphics.print(tostring(gameData["playerTwo"].score), ui.dimensions.playerTwoScoreDoublex, ui.dimensions.scoreY, 0)
 	end
 
 	love.graphics.setCanvas()
@@ -790,13 +793,13 @@ end
 
 function switchPlayer(gameData, ui)
 
-	if (gameData.currentPlayer == gameData[1]) then
+	if (gameData.currentPlayer == gameData["playerOne"]) then
 
-		gameData.currentPlayer = gameData[2]
+		gameData.currentPlayer = gameData["playerTwo"]
 
-	elseif (gameData.currentPlayer == gameData[2]) then
+	elseif (gameData.currentPlayer == gameData["playerTwo"]) then
 
-		gameData.currentPlayer = gameData[1]
+		gameData.currentPlayer = gameData["playerOne"]
 
 	end
 
