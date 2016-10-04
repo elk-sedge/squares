@@ -1,4 +1,5 @@
--- helpers
+-- ************************************************ HELPERS
+
 function round(x)
 
 	local mult = 10^(0)
@@ -6,7 +7,8 @@ function round(x)
 
 end
 
--- global
+-- ************************************************ GLOBAL
+
 local screenWidth, screenHeight = 600, 450 -- 4:3
 local boardWidth, boardHeight = round(screenWidth / 1.65), round(screenWidth / 1.65)
 
@@ -17,7 +19,8 @@ local masterGameData = {}
 local boardCanvas
 local uiCanvas
 
--- main
+-- ************************************************ LOAD
+
 function love.load()
 
 	love.window.setMode(screenWidth, screenHeight)
@@ -28,6 +31,8 @@ function love.load()
 	initGameData(masterGameData)
 	initBoard(masterBoard, 10, 10, boardWidth, boardHeight)
 	initUI(masterUI, screenWidth, screenHeight)
+
+	randomisedStart(masterBoard, 75)
 
 end
 
@@ -86,8 +91,8 @@ function initBoard(board, hPoints, vPoints, boardWidth, boardHeight)
 				cartesianX = cartesianX,
 				cartesianY = cartesianY,
 
-				n = false, e = false, s = false, w = false,
-				nh = false, eh = false, sh = false, wh = false,
+				e = false, s = false, 
+				eh = false, sh = false, 
 				fillSquare = false,
 				player = nil
 			}
@@ -116,12 +121,19 @@ function initUI(UI, uiWidth, uiHeight)
 	UI.dimensions.w = uiWidth
 	UI.dimensions.h = uiHeight
 
-	UI.dimensions.textWidth = UI.graphics.font:getWidth("X")
 	UI.dimensions.textHeight = UI.graphics.font:getHeight("X")
+	UI.dimensions.sigilWidth = UI.graphics.font:getWidth("X")
+	UI.dimensions.scoreWidthSingle = UI.graphics.font:getWidth("0")
+	UI.dimensions.scoreWidthDouble = UI.graphics.font:getWidth("00")
 	UI.dimensions.spacing = 20
 
-	UI.dimensions.playerOneUIx = (masterBoard.dimensions.x / 2) - (UI.dimensions.textWidth / 2)
-	UI.dimensions.playerTwoUIx = (masterBoard.dimensions.x + masterBoard.dimensions.w) + (masterBoard.dimensions.x / 2) - (UI.dimensions.textWidth / 2)
+	UI.dimensions.playerOneSigilx = (masterBoard.dimensions.x / 2) - (UI.dimensions.sigilWidth / 2)
+	UI.dimensions.playerOneScoreSinglex = (masterBoard.dimensions.x / 2) - (UI.dimensions.scoreWidthSingle / 2)
+	UI.dimensions.playerOneScoreDoublex = (masterBoard.dimensions.x / 2) - (UI.dimensions.scoreWidthDouble / 2)
+
+	UI.dimensions.playerTwoSigilx = (masterBoard.dimensions.x + masterBoard.dimensions.w) + (masterBoard.dimensions.x / 2) - (UI.dimensions.sigilWidth / 2)
+	UI.dimensions.playerTwoScoreSinglex = (masterBoard.dimensions.x + masterBoard.dimensions.w) + (masterBoard.dimensions.x / 2) - (UI.dimensions.scoreWidthSingle / 2)
+	UI.dimensions.playerTwoScoreDoublex = (masterBoard.dimensions.x + masterBoard.dimensions.w) + (masterBoard.dimensions.x / 2) - (UI.dimensions.scoreWidthDouble / 2)
 
 	UI.dimensions.sigilY = (screenHeight / 2) - (UI.dimensions.textHeight + UI.dimensions.spacing)
 	UI.dimensions.scoreY = (screenHeight / 2) + UI.dimensions.spacing
@@ -132,7 +144,7 @@ end
 
 function initGameData(gameData)
 
-	gameData[1] = 
+	gameData["playerOne"] = 
 	{
 		score = 0,
 		completedSquare = false,
@@ -140,7 +152,7 @@ function initGameData(gameData)
 		sigil = "X"
 	}
 
-	gameData[2] = 
+	gameData["playerTwo"] = 
 	{
 		score = 0,
 		completedSquare = false,
@@ -148,9 +160,247 @@ function initGameData(gameData)
 		sigil = "0"
 	}
 
-	gameData.currentPlayer = gameData[1]
+	gameData.currentPlayer = gameData["playerOne"]
 
 end
+
+function randomisedStart(board, randomLineQuantity) 
+
+	local randomLines = {}
+	local directions = { "e", "s" }
+
+	math.randomseed(os.time())
+
+	for i = 1, randomLineQuantity do
+
+		local randomLine
+
+		repeat
+
+			local randomPoint = math.random(#board.points)
+			local randomDirection = directions[math.random(#directions)]
+
+			randomLine = { point = randomPoint, direction = randomDirection }
+
+		until lineIsLegitimate(board, randomLine) and not lineListContainsLine(randomLines, randomLine) and not lineMakesSquarePossible(board, randomLines, randomLine)
+
+		table.insert(randomLines, randomLine)
+
+	end
+
+	for _, randomLine in pairs(randomLines) do
+
+		local point = board.points[randomLine.point]
+
+		if (randomLine.direction == "e") then
+
+			point.e = true
+
+		end
+
+		if (randomLine.direction == "s") then
+
+			point.s = true
+
+		end
+
+	end
+
+	drawBoard(board, masterGameData)
+
+end
+
+function lineIsLegitimate(board, line)
+
+	if (pointIsOnRightCol(line.point, #board.points, board.vPoints) and line.direction == "e") then
+
+		return false
+
+	end
+
+	if (pointIsOnBottomRow(line.point, board.vPoints) and line.direction == "s") then
+
+		return false
+
+	end
+
+	return true
+
+end
+
+function lineMakesSquarePossible(board, lines, potLine)
+
+	if (potLine.direction == "e") then
+
+		if (not pointIsOnTopRow(potLine.point, board.vPoints)) then
+
+			local northPointEast, northPointSouth, northEastPointSouth = getEastNorthSquareLines(potLine.point, board.vPoints)
+
+			local northPointEastDrawn = lineListContainsLine(lines, northPointEast) and 1 or 0
+			local northPointSouthDrawn = lineListContainsLine(lines, northPointSouth) and 1 or 0
+			local northEastPointSouthDrawn = lineListContainsLine(lines, northEastPointSouth) and 1 or 0
+
+			local totalLines = northPointEastDrawn + northPointSouthDrawn + northEastPointSouthDrawn
+
+			if (totalLines > 1) then
+
+				return true
+
+			end
+
+		end
+
+		if (not pointIsOnBottomRow(potLine.point, board.vPoints)) then
+
+			local localPointSouth, eastPointSouth, southPointEast = getEastSouthSquareLines(potLine.point, board.vPoints)
+
+			local localPointSouthDrawn = lineListContainsLine(lines, localPointSouth) and 1 or 0
+			local eastPointSouthDrawn = lineListContainsLine(lines, eastPointSouth) and 1 or 0
+			local southPointEastDrawn = lineListContainsLine(lines, southPointEast) and 1 or 0
+
+			local totalLines = localPointSouthDrawn + eastPointSouthDrawn + southPointEastDrawn
+
+			if (totalLines > 1) then
+
+				return true
+
+			end
+
+		end
+
+	elseif (potLine.direction == "s") then
+
+		if (not pointIsOnLeftCol(potLine.point, board.vPoints)) then
+
+			local westPointEast, westPointSouth, southWestPointEast = getSouthWestSquareLines(potLine.point, board.vPoints)
+
+			local westPointEastDrawn = lineListContainsLine(lines, westPointEast) and 1 or 0
+			local westPointSouthDrawn = lineListContainsLine(lines, westPointSouth) and 1 or 0
+			local southWestPointEastDrawn = lineListContainsLine(lines, southWestPointEast) and 1 or 0
+
+			local totalLines = westPointEastDrawn + westPointSouthDrawn + southWestPointEastDrawn
+
+			if (totalLines > 1) then
+
+				return true
+
+			end
+
+		end
+
+		if not (pointIsOnRightCol(potLine.point, #board.points, board.vPoints)) then
+
+			local localPointEast, eastPointSouth, southPointEast = getSouthEastSquareLines(potLine.point, board.vPoints)
+
+			local localPointEastDrawn = lineListContainsLine(lines, localPointEast) and 1 or 0
+			local eastPointSouthDrawn = lineListContainsLine(lines, eastPointSouth) and 1 or 0
+			local southPointEastDrawn = lineListContainsLine(lines, southPointEast) and 1 or 0
+
+			local totalLines = localPointEastDrawn + eastPointSouthDrawn + southPointEastDrawn
+
+			if (totalLines > 1) then
+
+				return true
+
+			end
+
+		end
+
+	end
+
+	return false
+
+end
+
+function pointIsOnTopRow(point, vPoints)
+
+	return point == 1 or point % (vPoints + 1) == 0
+
+end
+
+function pointIsOnBottomRow(point, vPoints)
+
+	return point % vPoints == 0
+
+end
+
+function pointIsOnLeftCol(point, vPoints)
+
+	return point <= vPoints
+
+end
+
+function pointIsOnRightCol(point, totalPoints, vPoints)
+
+	return point > totalPoints - vPoints
+
+end
+
+function getEastNorthSquareLines(point, vPoints)
+
+	-- get northPointEast/northPointSouth/northEastPointSouth
+	local northPointEast = { point = point - 1, direction = "e" }
+	local northPointSouth = { point = point - 1, direction = "s" }
+	local northEastPointSouth = { point = point + (vPoints - 1), direction = "s" }
+
+	return northPointEast, northPointSouth, northEastPointSouth
+
+end
+
+function getEastSouthSquareLines(point, vPoints)
+
+	-- get localPointSouth/eastPointSouth/southPointEast
+	local localPointSouth = { point = point, direction = "s" }
+	local eastPointSouth = { point = point + vPoints, direction = "s" }
+	local southPointEast = { point = point + 1, direction = "e" }
+
+	return localPointSouth, eastPointSouth, southPointEast
+
+end
+
+function getSouthWestSquareLines(point, vPoints)
+
+	-- get eastPointEast/eastPointSouth/southEastPointEast
+	local westPointEast = { point = point - vPoints, direction = "e" }
+	local westPointSouth = { point = point - vPoints, direction = "s" }
+	local southWestPointEast = { point = point - (vPoints - 1), direction = "e" }
+
+	return westPointEast, westPointSouth, southWestPointEast
+
+end
+
+function getSouthEastSquareLines(point, vPoints)
+
+	-- get localPointEast, eastPointSouth, southPointEast
+	local localPointEast = { point = point, direction = "e" }
+	local eastPointSouth = { point = point + 10, direction = "s" }
+	local southPointEast = { point = point + 1, direction = "e" }
+
+	return localPointEast, eastPointSouth, southPointEast
+
+end
+
+function lineListContainsLine(lines, line)
+
+	for _, lineListLine in pairs(lines) do
+
+		if (line.point == lineListLine.point) then
+
+			if (line.direction == lineListLine.direction) then
+
+				return true
+
+			end
+
+		end
+
+	end
+
+	return false
+
+end
+
+-- ************************************************ DRAW
 
 function love.draw()	
 
@@ -174,10 +424,13 @@ function drawBoard(board, gameData)
 		if (point.x < board.hPoints - 1) then
 
 			if (point.e) then
+				love.graphics.setLineWidth(2)
 				love.graphics.setColor(board.graphics.lineDrawnColour)
 			elseif (point.eh) then
+				love.graphics.setLineWidth(2)
 				love.graphics.setColor(board.graphics.lineHighlightColour)
 			else
+				love.graphics.setLineWidth(1)
 				love.graphics.setColor(board.graphics.lineUndrawnColour)
 			end
 
@@ -189,10 +442,13 @@ function drawBoard(board, gameData)
 		if (point.y < board.vPoints - 1) then
 
 			if (point.s) then
+				love.graphics.setLineWidth(2)
 				love.graphics.setColor(board.graphics.lineDrawnColour)
 			elseif (point.sh) then
+				love.graphics.setLineWidth(2)
 				love.graphics.setColor(board.graphics.lineHighlightColour)		
 			else
+				love.graphics.setLineWidth(1)
 				love.graphics.setColor(board.graphics.lineUndrawnColour)
 			end
 
@@ -211,10 +467,10 @@ function drawBoard(board, gameData)
 			local textX = round(squareCenterX - (masterBoard.dimensions.textWidth / 2))
 			local textY = round(squareCenterY - (masterBoard.dimensions.textHeight / 2))
 
-			if (point.player == gameData[1]) then
-				love.graphics.print(gameData[1].sigil, textX, textY)
-			elseif (point.player == gameData[2]) then
-				love.graphics.print(gameData[2].sigil, textX, textY)
+			if (point.player == gameData["playerOne"]) then
+				love.graphics.print(gameData["playerOne"].sigil, textX, textY)
+			elseif (point.player == gameData["playerTwo"]) then
+				love.graphics.print(gameData["playerTwo"].sigil, textX, textY)
 			end
 
 		end
@@ -237,21 +493,42 @@ function drawUI(ui, gameData)
 
 	love.graphics.setFont(ui.graphics.font)
 
+	-- set player one colour
 	love.graphics.setColor(ui.graphics.fontColour)
-	if (gameData.currentPlayer == gameData[1]) then love.graphics.setColor(ui.graphics.fontHighlightColour) end
+	if (gameData.currentPlayer == gameData["playerOne"]) then love.graphics.setColor(ui.graphics.fontHighlightColour) end
 
-	love.graphics.print(gameData[1].sigil, ui.dimensions.playerOneUIx, ui.dimensions.sigilY, 0)
-	love.graphics.print(tostring(gameData[1].score), ui.dimensions.playerOneUIx, ui.dimensions.scoreY, 0)
+	-- print player one sigil
+	love.graphics.print(gameData["playerOne"].sigil, ui.dimensions.playerOneSigilx, ui.dimensions.sigilY, 0)
 
+	-- print player one score
+	local playerOneScore = gameData["playerOne"].score
+
+	if (playerOneScore < 10) then
+		love.graphics.print(tostring(gameData["playerOne"].score), ui.dimensions.playerOneScoreSinglex, ui.dimensions.scoreY, 0)
+	else
+		love.graphics.print(tostring(gameData["playerOne"].score), ui.dimensions.playerOneScoreDoublex, ui.dimensions.scoreY, 0)
+	end
+
+	-- set player two colour
 	love.graphics.setColor(ui.graphics.fontColour)
-	if (gameData.currentPlayer == gameData[2]) then love.graphics.setColor(ui.graphics.fontHighlightColour) end
+	if (gameData.currentPlayer == gameData["playerTwo"]) then love.graphics.setColor(ui.graphics.fontHighlightColour) end
 
-	love.graphics.print(gameData[2].sigil, ui.dimensions.playerTwoUIx, ui.dimensions.sigilY, 0)
-	love.graphics.print(tostring(gameData[2].score), ui.dimensions.playerTwoUIx, ui.dimensions.scoreY, 0)
+	-- print player two sigil
+	love.graphics.print(gameData["playerTwo"].sigil, ui.dimensions.playerTwoSigilx, ui.dimensions.sigilY, 0)
+
+	-- print player two score
+	local playerTwoScore = gameData["playerTwo"].score
+	if (playerTwoScore < 10) then
+		love.graphics.print(tostring(gameData["playerTwo"].score), ui.dimensions.playerTwoScoreSinglex, ui.dimensions.scoreY, 0)
+	else
+		love.graphics.print(tostring(gameData["playerTwo"].score), ui.dimensions.playerTwoScoreDoublex, ui.dimensions.scoreY, 0)
+	end
 
 	love.graphics.setCanvas()
 
 end
+
+-- ************************************************ UPDATE
 
 function love.mousemoved(x, y)
 
@@ -520,13 +797,13 @@ end
 
 function switchPlayer(gameData, ui)
 
-	if (gameData.currentPlayer == gameData[1]) then
+	if (gameData.currentPlayer == gameData["playerOne"]) then
 
-		gameData.currentPlayer = gameData[2]
+		gameData.currentPlayer = gameData["playerTwo"]
 
-	elseif (gameData.currentPlayer == gameData[2]) then
+	elseif (gameData.currentPlayer == gameData["playerTwo"]) then
 
-		gameData.currentPlayer = gameData[1]
+		gameData.currentPlayer = gameData["playerOne"]
 
 	end
 
