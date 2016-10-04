@@ -19,7 +19,7 @@ local masterGameData = {}
 local boardCanvas
 local uiCanvas
 
--- ************************************************ MAIN
+-- ************************************************ LOAD
 
 function love.load()
 
@@ -400,6 +400,8 @@ function lineListContainsLine(lines, line)
 
 end
 
+-- ************************************************ DRAW
+
 function love.draw()	
 
 	love.graphics.setColor(255, 255, 255)
@@ -525,6 +527,8 @@ function drawUI(ui, gameData)
 	love.graphics.setCanvas()
 
 end
+
+-- ************************************************ UPDATE
 
 function love.mousemoved(x, y)
 
